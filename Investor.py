@@ -8,18 +8,25 @@ from spade import wait_until_finished
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 
-class Orderbook(Agent):
+class Investor(Agent):
     class MyBehav(CyclicBehaviour):
         async def on_start(self):
+            print("Starting behaviour . . .")
+            self.money = 5000
+            self.trade_condition = False
         async def run(self):
-            print("InformBehav running")
-            msg = Message(to="receiver@your_xmpp_server")  # Instantiate the message
+            print("I have: {} Dollars".format(self.money))
+            buy_prices = calculate_buy_prices(stock_data)
+            sell_prices = calculate_sell_prices(stock_data)
+            orderbook_msg = [buy_prices,sell_prices]
+            print("Sending Buy and Sell Offers")
+            msg = Message(to="Orderbook@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
             msg.set_metadata("ontology", "myOntology")  # Set the ontology of the message content
             msg.set_metadata("language", "OWL-S")  # Set the language of the message content
-            msg.body = "Hello World"  # Set the message content
-
+            msg.body = orderbook_msg  # Set the message content
             await self.send(msg)
+
             print("Message sent!")
 
             # set exit_code for the behaviour
@@ -27,20 +34,14 @@ class Orderbook(Agent):
 
             # stop agent from behaviour
             await self.agent.stop()
+        async def calculate_buy_prices(stock_data):
+            pass
+
+        async def calculate_sell_prices(stock_data):
+            pass
+
 
     async def setup(self):
         print("Agent starting . . .")
         b = self.MyBehav()
         self.add_behaviour(b)
-
-
-async def main():
-    dummy = Stockmarket("admin@localhost", "1234")
-    await dummy.start()
-    print("DummyAgent started. Check its console to see the output.")
-
-    print("Wait until user interrupts with ctrl+C")
-    await wait_until_finished(dummy)
-
-if __name__ == "__main__":
-   spade.run(main())
