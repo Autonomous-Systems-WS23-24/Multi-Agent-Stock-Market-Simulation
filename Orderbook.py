@@ -10,32 +10,27 @@ from spade.behaviour import CyclicBehaviour
 
 class Orderbook(Agent):
     class MyBehav(CyclicBehaviour):
-        async def on_start(self):
         async def run(self):
-            print("InformBehav running")
-            msg = Message(to="receiver@your_xmpp_server")  # Instantiate the message
-            msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-            msg.set_metadata("ontology", "myOntology")  # Set the ontology of the message content
-            msg.set_metadata("language", "OWL-S")  # Set the language of the message content
-            msg.body = "Hello World"  # Set the message content
+            print("RecvBehav running")
 
-            await self.send(msg)
-            print("Message sent!")
-
-            # set exit_code for the behaviour
-            self.exit_code = "Job Finished!"
+            msg = await self.receive(timeout=10)  # wait for a message for 10 seconds
+            if msg:
+                print("Message received with content: {}".format(msg.body))
+            else:
+                print("Did not received any message after 10 seconds")
 
             # stop agent from behaviour
             await self.agent.stop()
 
     async def setup(self):
         print("Agent starting . . .")
-        b = self.MyBehav()
-        self.add_behaviour(b)
+        template = Template()
+        template.set_metadata("performative", "inform")
+        self.add_behaviour(b, template)
 
 
 async def main():
-    dummy = Stockmarket("admin@localhost", "1234")
+    dummy = Stockmarket("Orderbook@localhost", "1234")
     await dummy.start()
     print("DummyAgent started. Check its console to see the output.")
 
