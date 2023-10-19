@@ -1,13 +1,3 @@
-import asyncio
-import pandas as pd
-from matplotlib import pyplot as plt
-import numpy as np
-import spade
-import talib as tl
-from spade import wait_until_finished
-from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour
-
 class Investor(Agent):
     class MyBehav(CyclicBehaviour):
         async def on_start(self):

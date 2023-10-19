@@ -30,7 +30,7 @@ class Orderbook(Agent):
 
 
 async def main():
-    dummy = Stockmarket("Orderbook@localhost", "1234")
+    dummy = Orderbook("Orderbook@localhost", "1234")
     await dummy.start()
     print("DummyAgent started. Check its console to see the output.")
 
