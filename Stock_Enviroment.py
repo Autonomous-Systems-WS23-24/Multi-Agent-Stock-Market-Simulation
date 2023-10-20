@@ -7,7 +7,9 @@ import talib as tl
 from spade import wait_until_finished
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
-
+from spade.template import Template
+import Orderbook
+import Investor
 
 class Stockmarket(Agent):
     class MyBehav(CyclicBehaviour):
@@ -29,55 +31,16 @@ class Stockmarket(Agent):
 
 
 async def main():
-    dummy = Stockmarket("admin@localhost", "1234")
-    await dummy.start()
-    print("DummyAgent started. Check its console to see the output.")
-
+    Agent_Orderbook = Orderbook.Orderbook("Orderbook@localhost", "1234")
+    Agent_Investor = Investor.Investor("admin@localhost", "1234")
+    await Agent_Investor.start()
+    await Agent_Orderbook.start()
+    print("Orderbook is available. Check its console to see the output.")
     print("Wait until user interrupts with ctrl+C")
-    await wait_until_finished(dummy)
+    await wait_until_finished(Orderbook)
+    await wait_until_finished(Investor)
 
-def stock_cue_calc(stock_data):
-    # Calculate 52-day moving average
-    stock_data['52-day MA'] = tl.MA(stock_data['Close'], timeperiod=52, matype=0)
-
-    # Calculate 26-day moving average
-    stock_data['26-day MA'] = tl.MA(stock_data['Close'], timeperiod=26, matype=0)
-
-    # Calculate Relative Strength Index (RSI)
-    stock_data['RSI'] = tl.RSI(stock_data['Close'], timeperiod=14)
-
-    # Calculate Market Index and its slope
-    stock_data['Market Index'] = (stock_data['High'] + stock_data['Low']) / 2
-    stock_data['Market Index Slope'] = np.gradient(stock_data['Market Index'])
-
-    # Calculate Market Level - Index Average
-    market_index_average = stock_data['Market Index'].mean()
-    stock_data['Market Level - Index Average'] = market_index_average
-
-    # Calculate Market Index Acceleration
-    stock_data['Market Index Acceleration'] = np.gradient(stock_data['Market Index Slope'])
-
-    # Calculate MACD
-    stock_data['MACD'], stock_data['Signal'], _ = tl.MACD(stock_data['Close'], fastperiod=12, slowperiod=26,
-                                                             signalperiod=9)
-
-    # Calculate Stochastic Oscillator
-    stock_data['K'], stock_data['D'] = tl.STOCH(stock_data['High'], stock_data['Low'], stock_data['Close'],
-                                                   fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3,
-                                                   slowd_matype=0)
-
-    return stock_data
 
 
 if __name__ == "__main__":
-    #df = pd.read_csv('archive/Stocks/zoes.us.txt')
-    #print(df)
-    #cues = stock_cue_calc(df) # This calculates relevant quantities for technical analysis
-    #plot_data = df.to_numpy()
     spade.run(main())
-    #plt.plot(plot_data[:,0],plot_data[:,14]) # print some example stock
-    #plt.title('Stock Price Chart')
-    #plt.xlabel('Date')
-    #plt.ylabel('Price')
-    #print(df)
-    #plt.show()
