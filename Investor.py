@@ -20,7 +20,8 @@ class Investor(Agent):
             stockdata = await self.receive(timeout=10)  # wait for a message for 10 seconds
             if stockdata:
                 print("Stockdata received")
-                self.dataframe_stockdata = pd.read_json(stockdata, orient='records')
+                print(stockdata.body)
+                self.dataframe_stockdata = pd.read_json(stockdata.body, orient='records')
                 print(self.dataframe_stockdata)
             else:
                 print("Did not received any stockdata after 10 seconds")
