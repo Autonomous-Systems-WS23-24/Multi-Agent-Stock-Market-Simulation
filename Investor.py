@@ -1,4 +1,6 @@
 import asyncio
+import io
+
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
@@ -9,25 +11,26 @@ from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 
+
 class Investor(Agent):
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
             print("Starting behaviour . . .")
             self.money = 5000
             self.trade_condition = False
+            self.count = 0
         async def run(self):
-            print("I have: {} Dollars".format(self.money))
             stockdata = await self.receive(timeout=10)  # wait for a message for 10 seconds
             if stockdata:
-                print("Stockdata received")
-                print(stockdata.body)
-                self.dataframe_stockdata = pd.read_json(stockdata.body, orient='records')
+                self.count += 1
+                print("Stockdata received, count {}".format(self.count))
+                self.dataframe_stockdata = pd.read_csv(io.StringIO(stockdata.body), sep='\s+')
                 print(self.dataframe_stockdata)
             else:
                 print("Did not received any stockdata after 10 seconds")
 
             # stop agent from behaviour
-            await self.agent.stop()
+            await asyncio.sleep(1)
             #buy_prices = calculate_buy_prices(stock_data)
             #sell_prices = calculate_sell_prices(stock_data)
             #orderbook_msg = [buy_prices,sell_prices]

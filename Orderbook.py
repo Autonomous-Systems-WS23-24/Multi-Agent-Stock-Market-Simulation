@@ -27,18 +27,18 @@ class Orderbook(Agent):
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-                msg.body = self.stock_data.to_json(orient='records')  # Set the message content
+                msg.body = self.stock_data.to_string()  # Set the message content
                 await self.send(msg)
             print("Sent stockdata to traders!")
 
-            msg = await self.receive(timeout=10)  # wait for a message for 10 seconds
-            if msg:
-                print("Message received with content: {}".format(msg.body))
-            else:
-                print("Did not received any message after 10 seconds")
+            #msg = await self.receive(timeout=10)  # wait for a message for 10 seconds
+            #if msg:
+            #    print("Message received with content: {}".format(msg.body))
+            #else:
+            #    print("Did not received any message after 10 seconds")
 
             # stop agent from behaviour
-            await self.agent.stop()
+            await asyncio.sleep(1)
 
     async def setup(self):
         print("Agent starting . . .")

@@ -20,8 +20,9 @@ async def main():
     await Agent_Orderbook.start()
     print("Orderbook is available. Check its console to see the output.")
     print("Wait until user interrupts with ctrl+C")
-    await wait_until_finished(Orderbook)
-    await wait_until_finished(Investor)
+    await wait_until_finished(Agent_Orderbook)
+    await wait_until_finished(Agent_Investor)
+
 
 
 
