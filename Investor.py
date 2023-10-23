@@ -24,8 +24,12 @@ class Investor(Agent):
             if stockdata:
                 self.count += 1
                 print("Stockdata received, count {}".format(self.count))
+                print(stockdata.body)
+                # Specify the file path where you want to save the text file
                 self.dataframe_stockdata = pd.read_csv(io.StringIO(stockdata.body), sep='\s+')
                 print(self.dataframe_stockdata)
+                print(self.dataframe_stockdata.shape)
+                print("this was received")
             else:
                 print("Did not received any stockdata after 10 seconds")
 

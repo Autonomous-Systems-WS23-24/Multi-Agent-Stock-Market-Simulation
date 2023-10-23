@@ -19,8 +19,8 @@ class Orderbook(Agent):
             print("Creating Stockmarket Data . . .")
             for stock in self.list_stocks:
                self.stock_data = pd.read_csv('archive/Stocks/{}'.format(stock))
-               self.stock_data = stock_cue_calc(self.stock_data)[100:150]
-               print(self.stock_data)
+               self.stock_data = stock_cue_calc(self.stock_data)[100:102]
+               print("calculation of cues completed!")
         async def run(self):
             print("Contacting Traders")
             self.investor_list = ["admin"]
