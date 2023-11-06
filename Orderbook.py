@@ -24,33 +24,35 @@ class Orderbook(Agent):
                 print("calculation of cues completed!")
 
         async def run(self):
-            print("Contacting Traders")
+            #print("Contacting Traders")
             self.investor_list = ["investor1", "investor2"]
+            self.matchingbook = pd.DataFrame(columns= ["name","buy","sell"])
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
                 msg.body = self.stock_data.to_json(orient="split")  # Set the message content
                 await self.send(msg)
-            print("Sent stockdata to traders!")
+            #print("Sent stockdata to traders!")
 
             for i in range(len(self.investor_list)):
                 offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
                 if offers:
-                    print("Offers from Agent {} received!".format(offers.sender))
+                    #print("Offers from Agent {} received!".format(offers.sender))
                     # print(offers.body)
                     # Specify the file path where you want to save the text file
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore", category=FutureWarning)
                         self.dataframe_offers = pd.read_json(offers.body, orient="split")
-                    print(self.dataframe_offers)
-                    print("this was received")
+
+                    #print(self.dataframe_offers)
+                    self.matchingbook = pd.concat([self.matchingbook,self.dataframe_offers],axis=0,ignore_index=True)
                 else:
                     print("Did not receive any stockdata after 10 seconds")
-
             await asyncio.sleep(1)
+            print(self.matchingbook)
 
     async def setup(self):
-        print("Agent starting . . .")
+        print("Orderbook starting . . .")
         template = Template()
         template.set_metadata("performative", "inform")
         b = self.OrderbookBehav()
@@ -85,7 +87,7 @@ def stock_cue_calc(stock_data):
 async def main():
     dummy = Orderbook("Orderbook@localhost", "1234")
     await dummy.start()
-    print("DummyAgent started. Check its console to see the output.")
+    print("Orderbook started. Check its console to see the output.")
 
     print("Wait until user interrupts with ctrl+C")
     await wait_until_finished(dummy)
