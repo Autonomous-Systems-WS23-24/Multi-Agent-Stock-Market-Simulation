@@ -47,7 +47,7 @@ class Investor(Agent):
 
 
     def strategy(self, dataframe_stockdata):
-        buy_price, sell_price = Strategies.strategy_name(dataframe_stockdata)
+        buy_price, sell_price = Strategies.strategy_one(dataframe_stockdata)
         #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
         orderbook_entry = {
             "name": [self.jid[0]],

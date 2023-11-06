@@ -1,4 +1,4 @@
-def strategy_one(datafram_stockdata):
+def strategy_one(dataframe_stockdata):
     # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
     # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
     RSI_value = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'RSI']
