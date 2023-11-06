@@ -10,7 +10,7 @@ from spade import wait_until_finished
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.template import Template
-
+import warnings
 
 class Investor(Agent):
     class InvestBehav(CyclicBehaviour):
@@ -27,7 +27,9 @@ class Investor(Agent):
                 print(stockdata.body)
                 # Specify the file path where you want to save the text file
                 #self.dataframe_stockdata = pd.read_csv(io.StringIO(stockdata.body), sep='\s+')
-                self.dataframe_stockdata = pd.read_json(stockdata.body,orient="split")
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=FutureWarning)
+                    self.dataframe_stockdata = pd.read_json(stockdata.body,orient="split")
                 print(self.dataframe_stockdata)
                 print("this was received")
             else:
