@@ -59,12 +59,12 @@ class Investor(Agent):
         if RSI_value < 35 and price_mean <= (MA52 - 5):
             buy_price = price_mean - 5
         else:
-            buy_price = 0
+            buy_price = 99999
         # selling when RSI value is higher than 40 or if the low price is 5 lower than MA52. Sell the stock for the mean price
         if RSI_value > 40 or price_low <= (MA52 - 5):
             sell_price = price_mean
         else:
-            sell_price = 9999999999
+            sell_price = 0
         #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
         orderbook_entry = {
             "name": [self.jid[0]],

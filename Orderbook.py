@@ -49,8 +49,37 @@ class Orderbook(Agent):
                 else:
                     print("Did not receive any stockdata after 10 seconds")
             await asyncio.sleep(1)
+            transaction_df = self.do_transactions()
             print(self.matchingbook)
+            print(transaction_df)
+        def do_transactions(self):
+            matchingbook = self.matchingbook
+            df_buy_sorted = matchingbook.sort_values(by="buy", ascending=False).reset_index(drop=True)
+            df_sell_sorted = matchingbook.sort_values(by="sell").reset_index(drop=True)
+            transactions = []  # Initialize an empty list for transactions
+            matched_buyers = set()
+            matched_sellers = set()
 
+            for index in range(len(df_buy_sorted.index)):
+                buyer_name = df_buy_sorted["name"][index]
+                seller_name = df_sell_sorted["name"][index]
+
+                if buyer_name == seller_name:
+                    continue  # Skip matching the buyer and seller with the same name
+
+                if buyer_name not in matched_buyers and seller_name not in matched_sellers and df_buy_sorted["buy"][
+                    index] >= df_sell_sorted["sell"][index]:
+                    transaction = {"buyer": buyer_name, "seller": seller_name}
+                    transactions.append(transaction)
+
+                    matched_buyers.add(buyer_name)
+                    matched_sellers.add(seller_name)
+            # Convert the list of dictionaries into a DataFrame
+                else:
+                    break
+            transaction_df = pd.DataFrame(transactions)
+
+            return transaction_df
     async def setup(self):
         print("Orderbook starting . . .")
         template = Template()
