@@ -27,7 +27,7 @@ class Orderbook(Agent):
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-                msg.body = self.stock_data.to_string()  # Set the message content
+                msg.body = self.stock_data.to_json(orient="split")  # Set the message content
                 await self.send(msg)
             print("Sent stockdata to traders!")
 
