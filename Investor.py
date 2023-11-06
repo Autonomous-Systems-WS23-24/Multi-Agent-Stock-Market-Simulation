@@ -30,22 +30,23 @@ class Investor(Agent):
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", category=FutureWarning)
                     self.dataframe_stockdata = pd.read_json(stockdata.body,orient="split")
-                #print(self.dataframe_stockdata)
+                    self.offers = pd.DataFrame(self.agent.lowrisk_strategy(self.dataframe_stockdata))
+                    print(self.offers)
             else:
                 print("Did not received any stockdata after 10 seconds")
 
             # stop agent from behaviour
             #buy_prices = calculate_buy_prices(stock_data)
             #sell_prices = calculate_sell_prices(stock_data)
-            self.buy = pd.DataFrame(self.stock_list)
-            self.sell = pd.DataFrame(self.stock_list)
+
+
 
             print("Sending Buy and Sell Offers")
             msg = Message(to="Orderbook@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
             msg.set_metadata("ontology", "myOntology")  # Set the ontology of the message content
             msg.set_metadata("language", "OWL-S")  # Set the language of the message content
-            msg.body = self.buy.to_json(orient="split")  # Set the message content
+            msg.body = self.offers.to_json(orient="split")  # Set the message content
             await self.send(msg)
 
             print("Offers sent!")
@@ -54,12 +55,29 @@ class Investor(Agent):
 
             # stop agent from behaviour
             #await self.agent.stop()
-        async def calculate_buy_prices(stock_data):
-            pass
 
-        async def calculate_sell_prices(stock_data):
-            pass
-
+    def lowrisk_strategy(self, dataframe_stockdata):
+        # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
+        # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
+        RSI_value = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'RSI']
+        price_low = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Low']
+        price_high = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'High']
+        price_mean = (price_low + price_high) / 2
+        # moving average of last 52 days
+        MA52 = dataframe_stockdata.at[dataframe_stockdata.index[-1], '52-day MA']
+        print(f'RSI: {RSI_value}', f'MA of alst 52 days: {MA52}')
+        # buying when RSI value is lower than 35, and the mean price is 5 euro lower than the MA52. Buy the stock for the mean price
+        if RSI_value < 35 and price_mean <= (MA52 - 5):
+            buy_price = price_mean - 5
+        else:
+            buy_price = 0
+        # selling when RSI value is higher than 40 or if the low price is 5 lower than MA52. Sell the stock for the mean price
+        if RSI_value > 40 or price_low <= (MA52 - 5):
+            sell_price = price_mean
+        else:
+            sell_price = 9999999999
+        #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
+        return [buy_price, sell_price]
 
     async def setup(self):
         print(f"{self.jid} started . . .")
