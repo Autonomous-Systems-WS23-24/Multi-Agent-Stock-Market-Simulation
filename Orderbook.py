@@ -23,7 +23,7 @@ class Orderbook(Agent):
                print("calculation of cues completed!")
         async def run(self):
             print("Contacting Traders")
-            self.investor_list = ["admin"]
+            self.investor_list = ["investor1"]
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
@@ -41,7 +41,7 @@ class Orderbook(Agent):
             await asyncio.sleep(1)
 
     async def setup(self):
-        print("Agent starting . . .")
+        print("Orderbook starting . . .")
         template = Template()
         template.set_metadata("performative", "inform")
         b = self.OrderbookBehav()

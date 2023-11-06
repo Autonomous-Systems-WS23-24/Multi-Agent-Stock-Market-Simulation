@@ -63,7 +63,7 @@ class Investor(Agent):
 
 
     async def setup(self):
-        print("Investor started")
+        print(f"{self.jid} started . . .")
         b = self.InvestBehav()
         template = Template()
         template.set_metadata("performative", "inform")
