@@ -12,7 +12,7 @@ from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 from spade.message import Message
 import warnings
-import strategies
+import Strategies
 
 class Investor(Agent):
     class InvestBehav(CyclicBehaviour):
