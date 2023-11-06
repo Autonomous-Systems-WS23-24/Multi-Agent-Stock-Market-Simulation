@@ -26,19 +26,15 @@ class Investor(Agent):
             if stockdata:
                 self.count += 1
                 print("Stockdata received, count {}".format(self.count))
-                #print(stockdata.body)
                 # Specify the file path where you want to save the text file
-                #self.dataframe_stockdata = pd.read_csv(io.StringIO(stockdata.body), sep='\s+')
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", category=FutureWarning)
                     self.dataframe_stockdata = pd.read_json(stockdata.body,orient="split")
-                print(self.dataframe_stockdata)
-                print("this was received")
+                #print(self.dataframe_stockdata)
             else:
                 print("Did not received any stockdata after 10 seconds")
 
             # stop agent from behaviour
-            await asyncio.sleep(1)
             #buy_prices = calculate_buy_prices(stock_data)
             #sell_prices = calculate_sell_prices(stock_data)
             self.buy = pd.DataFrame(self.stock_list)

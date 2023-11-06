@@ -12,18 +12,20 @@ from spade.template import Template
 import json
 import warnings
 
+
 class Orderbook(Agent):
     class OrderbookBehav(CyclicBehaviour):
         async def on_start(self):
             self.list_stocks = ["zoes.us.txt"]
             print("Creating Stockmarket Data . . .")
             for stock in self.list_stocks:
-               self.stock_data = pd.read_csv('archive/Stocks/{}'.format(stock))
-               self.stock_data = stock_cue_calc(self.stock_data)[100:102]
-               print("calculation of cues completed!")
+                self.stock_data = pd.read_csv('archive/Stocks/{}'.format(stock))
+                self.stock_data = stock_cue_calc(self.stock_data)[100:102]
+                print("calculation of cues completed!")
+
         async def run(self):
             print("Contacting Traders")
-            self.investor_list = ["admin"]
+            self.investor_list = ["investor1", "investor2"]
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
@@ -31,18 +33,19 @@ class Orderbook(Agent):
                 await self.send(msg)
             print("Sent stockdata to traders!")
 
-            offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
-            if offers:
-                print("Offers received!")
-                # print(offers.body)
-                # Specify the file path where you want to save the text file
-                with warnings.catch_warnings():
-                    warnings.filterwarnings("ignore", category=FutureWarning)
-                    self.dataframe_offers = pd.read_json(offers.body, orient="split")
-                print(self.dataframe_offers)
-                print("this was received")
-            else:
-                print("Did not received any stockdata after 10 seconds")
+            for i in range(len(self.investor_list)):
+                offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
+                if offers:
+                    print("Offers from Agent {} received!".format(offers.sender))
+                    # print(offers.body)
+                    # Specify the file path where you want to save the text file
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings("ignore", category=FutureWarning)
+                        self.dataframe_offers = pd.read_json(offers.body, orient="split")
+                    print(self.dataframe_offers)
+                    print("this was received")
+                else:
+                    print("Did not receive any stockdata after 10 seconds")
 
             await asyncio.sleep(1)
 
@@ -71,11 +74,11 @@ def stock_cue_calc(stock_data):
     stock_data['Market Index Acceleration'] = np.gradient(stock_data['Market Index Slope'])
     # Calculate MACD
     stock_data['MACD'], stock_data['Signal'], _ = tl.MACD(stock_data['Close'], fastperiod=12, slowperiod=26,
-                                                             signalperiod=9)
+                                                          signalperiod=9)
     # Calcuate Stochastic Oscillator
     stock_data['K'], stock_data['D'] = tl.STOCH(stock_data['High'], stock_data['Low'], stock_data['Close'],
-                                                   fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3,
-                                                   slowd_matype=0)
+                                                fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3,
+                                                slowd_matype=0)
     return stock_data
 
 
@@ -87,5 +90,6 @@ async def main():
     print("Wait until user interrupts with ctrl+C")
     await wait_until_finished(dummy)
 
+
 if __name__ == "__main__":
-   spade.run(main())
+    spade.run(main())
