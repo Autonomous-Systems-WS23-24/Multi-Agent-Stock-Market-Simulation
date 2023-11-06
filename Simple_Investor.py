@@ -8,16 +8,28 @@ import random
 class SimpleInvestor(Agent):
     class SimpleInvestorBehav(CyclicBehaviour):
         async def run(self):
-            stockdata = await self.receive(timeout=10)  # Espera un mensaje durante 10 segundos
+            stockdata = await self.receive(timeout=10)  # Should it recieve any info? Maybe for the randomness in buy_prices and sell_prices
             if stockdata:
                 print("Received stock data:")
                 print(stockdata.body)
                 
-                # Simular una acción aleatoria (comprar o vender)
+
+                buy_prices=random.random(stockdata)
+                sell_prices=random.random(stockdata)
+
+                # Simulate a random action (buy or sell)
                 action = random.choice(["buy", "sell"])
                 print(f"Taking a random action: {action}")
                 
-                # Puedes enviar una confirmación al agente Orderbook
+
+                if action=="buy":
+                    pass
+                elif action=="sell":
+                    pass
+
+
+
+                # Send a confirmation to Orderbook agent
                 msg = stockdata.make_reply()
                 msg.body = f"Action taken: {action}"
                 await self.send(msg)
