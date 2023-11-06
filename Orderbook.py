@@ -10,7 +10,7 @@ from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 from spade.template import Template
 import json
-
+import warnings
 
 class Orderbook(Agent):
     class OrderbookBehav(CyclicBehaviour):
@@ -31,13 +31,19 @@ class Orderbook(Agent):
                 await self.send(msg)
             print("Sent stockdata to traders!")
 
-            #msg = await self.receive(timeout=10)  # wait for a message for 10 seconds
-            #if msg:
-            #    print("Message received with content: {}".format(msg.body))
-            #else:
-            #    print("Did not received any message after 10 seconds")
+            offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
+            if offers:
+                print("Offers received!")
+                # print(offers.body)
+                # Specify the file path where you want to save the text file
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=FutureWarning)
+                    self.dataframe_offers = pd.read_json(offers.body, orient="split")
+                print(self.dataframe_offers)
+                print("this was received")
+            else:
+                print("Did not received any stockdata after 10 seconds")
 
-            # stop agent from behaviour
             await asyncio.sleep(1)
 
     async def setup(self):
