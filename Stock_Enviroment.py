@@ -24,8 +24,6 @@ async def main():
     print("Orderbook is available. Check its console to see the output.")
     print("Wait until user interrupts with ctrl+C")
     Agent_Orderbook.web.start(hostname="127.0.0.1", port="10000")
-    Agent_Investor1.web.start(hostname="127.0.0.1", port="10001")
-    Agent_Investor2.web.start(hostname="127.0.0.1", port="10002")
     await wait_until_finished(Agent_Orderbook)
     await wait_until_finished(Agent_Investor1)
     await wait_until_finished(Agent_Investor2)
