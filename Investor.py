@@ -12,6 +12,7 @@ from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 from spade.message import Message
 import warnings
+import strategies
 
 class Investor(Agent):
     class InvestBehav(CyclicBehaviour):
@@ -30,7 +31,7 @@ class Investor(Agent):
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", category=FutureWarning)
                     self.dataframe_stockdata = pd.read_json(stockdata.body,orient="split")
-                    self.offers = self.agent.lowrisk_strategy(self.dataframe_stockdata)
+                    self.offers = self.agent.strategy(self.dataframe_stockdata)
                     #print(self.offers)
             else:
                 print("Did not received any stockdata after 10 seconds")
@@ -45,7 +46,7 @@ class Investor(Agent):
             await self.send(msg)
 
 
-    def lowrisk_strategy(self, dataframe_stockdata):
+    def strategy(self, dataframe_stockdata):
         # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
         # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
         RSI_value = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'RSI']
@@ -56,15 +57,7 @@ class Investor(Agent):
         MA52 = dataframe_stockdata.at[dataframe_stockdata.index[-1], '52-day MA']
         #print(f'RSI: {RSI_value}', f'MA of alst 52 days: {MA52}')
         # buying when RSI value is lower than 35, and the mean price is 5 euro lower than the MA52. Buy the stock for the mean price
-        if RSI_value < 35 and price_mean <= (MA52 - 5):
-            buy_price = price_mean - 5
-        else:
-            buy_price = 99999
-        # selling when RSI value is higher than 40 or if the low price is 5 lower than MA52. Sell the stock for the mean price
-        if RSI_value > 40 or price_low <= (MA52 - 5):
-            sell_price = price_mean
-        else:
-            sell_price = 0
+        buy_price, sell_price = strategies.strategy_name()
         #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
         orderbook_entry = {
             "name": [self.jid[0]],
