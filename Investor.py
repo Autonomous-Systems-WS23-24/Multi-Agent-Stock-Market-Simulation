@@ -24,7 +24,7 @@ class Investor(Agent):
             if stockdata:
                 self.count += 1
                 print("Stockdata received, count {}".format(self.count))
-                print(stockdata.body)
+                #print(stockdata.body)
                 # Specify the file path where you want to save the text file
                 #self.dataframe_stockdata = pd.read_csv(io.StringIO(stockdata.body), sep='\s+')
                 with warnings.catch_warnings():
