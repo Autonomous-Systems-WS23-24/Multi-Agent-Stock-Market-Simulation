@@ -76,3 +76,37 @@ def strategy_BollingerBands(dataframe_stockdata):
     print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
 
     return buy_price, sell_price
+
+
+def strategy_MACD(dataframe_stockdata):
+    # Define the short-term and long-term periods for the EMA calculation
+    short_term_period = 12
+    long_term_period = 26
+
+    # Calculate the short-term and long-term exponential moving averages (EMA)
+    short_term_ema = dataframe_stockdata['Close'].ewm(span=short_term_period, adjust=False).mean()
+    long_term_ema = dataframe_stockdata['Close'].ewm(span=long_term_period, adjust=False).mean()
+
+    # Calculate the MACD line by subtracting the long-term EMA from the short-term EMA
+    macd_line = short_term_ema - long_term_ema
+
+    # Define the signal line period
+    signal_line_period = 9
+
+    # Calculate the signal line as a 9-period EMA of the MACD line
+    signal_line = macd_line.ewm(span=signal_line_period, adjust=False).mean()
+
+    # Determine the buy and sell signals based on MACD
+    buy_price = 0
+    sell_price = 9999999999
+
+    if macd_line.iloc[-1] > signal_line.iloc[-1] and macd_line.iloc[-2] <= signal_line.iloc[-2]:
+        buy_price = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']
+    elif macd_line.iloc[-1] < signal_line.iloc[-1] and macd_line.iloc[-2] >= signal_line.iloc[-2]:
+        sell_price = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']
+
+    print(f'MACD Line: {macd_line.iloc[-1]:.2f}')
+    print(f'Signal Line: {signal_line.iloc[-1]:.2f}')
+    print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
+
+    return buy_price, sell_price
