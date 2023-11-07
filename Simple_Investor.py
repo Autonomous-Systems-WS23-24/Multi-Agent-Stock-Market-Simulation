@@ -35,6 +35,7 @@ class SimpleInvestor(Agent):
                 await self.send(msg)
             else:
                 print("Did not receive any stock data after 10 seconds")
+                self.kill()
 
     async def setup(self):
         print("SimpleInvestor started")

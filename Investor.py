@@ -17,7 +17,7 @@ import Strategies
 class Investor(Agent):
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
-            print("Starting behaviour . . .")
+            print('Starting  behaviour...')
             self.money = 5000
             self.trade_condition = False
             self.count = 0
@@ -35,6 +35,7 @@ class Investor(Agent):
                     #print(self.offers)
             else:
                 print("Did not received any stockdata after 10 seconds")
+                self.kill()
 
 
             #print("Sending Buy and Sell Offers")
