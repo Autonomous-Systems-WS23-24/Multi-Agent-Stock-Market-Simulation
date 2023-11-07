@@ -2,3 +2,7 @@
 Scratch files/Investor_scratch.py
 Scratch files/Orderbook_scratch.py
 Scratch files/Stock_Enviroment_scratch.py
+__pycache__/Investor.cpython-310.pyc
+__pycache__/Orderbook.cpython-310.pyc
+__pycache__/Strategies.cpython-310.pyc
+*.pyc
