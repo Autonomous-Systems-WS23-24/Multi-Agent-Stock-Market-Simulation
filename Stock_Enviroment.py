@@ -15,18 +15,18 @@ import Investor
 
 
 async def main():
+    num_investors = 5
     Agent_Orderbook = Orderbook.Orderbook("Orderbook@localhost", "1234")
-    Agent_Investor1 = Investor.Investor("investor1@localhost", "1234")
-    Agent_Investor2 = Investor.Investor("investor2@localhost", "1234")
-    await Agent_Investor1.start()
-    await Agent_Investor2.start()
-    await Agent_Orderbook.start()
+    investors = [Investor.Investor(f"investor{i}@localhost", "1234") for i in range(1, num_investors + 1)]
+    tasks = [Agent_Orderbook.start()]
+    for investor in investors:
+        tasks.append(investor.start())
+    await asyncio.gather(*tasks)
     print("Orderbook is available. Check its console to see the output.")
     print("Wait until user interrupts with ctrl+C")
     Agent_Orderbook.web.start(hostname="127.0.0.1", port="10000")
     await wait_until_finished(Agent_Orderbook)
     await wait_until_finished(Agent_Investor1)
-    await wait_until_finished(Agent_Investor2)
 
 
 

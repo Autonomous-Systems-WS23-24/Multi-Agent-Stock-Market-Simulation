@@ -25,8 +25,9 @@ class Orderbook(Agent):
 
         async def run(self):
             #print("Contacting Traders")
-            self.investor_list = ["investor1", "investor2"]
-            self.matchingbook = pd.DataFrame(columns= ["name","buy","sell"])
+            num_investors = 5
+            self.investor_list = [f"investor{i}" for i in range(1,num_investors+1)]
+            self.offerbook = pd.DataFrame(columns= ["name","buy","sell"])
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
@@ -45,17 +46,17 @@ class Orderbook(Agent):
                         self.dataframe_offers = pd.read_json(offers.body, orient="split")
 
                     #print(self.dataframe_offers)
-                    self.matchingbook = pd.concat([self.matchingbook,self.dataframe_offers],axis=0,ignore_index=True)
+                    self.offerbook = pd.concat([self.offerbook,self.dataframe_offers],axis=0,ignore_index=True)
                 else:
                     print("Did not receive any stockdata after 10 seconds")
             await asyncio.sleep(1)
             transaction_df = self.do_transactions()
-            print(self.matchingbook)
+            print(self.offerbook)
             print(transaction_df)
         def do_transactions(self):
-            matchingbook = self.matchingbook
-            df_buy_sorted = matchingbook.sort_values(by="buy", ascending=False).reset_index(drop=True)
-            df_sell_sorted = matchingbook.sort_values(by="sell").reset_index(drop=True)
+            offerbook = self.offerbook
+            df_buy_sorted = offerbook.sort_values(by="buy", ascending=False).reset_index(drop=True)
+            df_sell_sorted = offerbook.sort_values(by="sell").reset_index(drop=True)
             transactions = []  # Initialize an empty list for transactions
             matched_buyers = set()
             matched_sellers = set()
@@ -69,7 +70,8 @@ class Orderbook(Agent):
 
                 if buyer_name not in matched_buyers and seller_name not in matched_sellers and df_buy_sorted["buy"][
                     index] >= df_sell_sorted["sell"][index]:
-                    transaction = {"buyer": buyer_name, "seller": seller_name}
+                    transaction_value = (df_sell_sorted["sell"][index]+ df_buy_sorted["buy"][index])/2
+                    transaction = {"buyer": buyer_name, "seller": seller_name, "price": transaction_value}
                     transactions.append(transaction)
 
                     matched_buyers.add(buyer_name)
