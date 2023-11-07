@@ -34,7 +34,7 @@ class Investor(Agent):
                     self.offers = self.agent.strategy(self.dataframe_stockdata)
                     #print(self.offers)
             else:
-                print("Did not received any stockdata after 10 seconds")
+                print(f"{self.agent.jid} did not receive any stockdata after 10 seconds")
                 self.kill()
 
 
