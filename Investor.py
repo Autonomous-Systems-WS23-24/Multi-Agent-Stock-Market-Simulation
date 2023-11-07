@@ -12,6 +12,7 @@ from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 from spade.message import Message
 import warnings
+import Strategies_classes
 import Strategies
 
 class Investor(Agent):
@@ -30,9 +31,16 @@ class Investor(Agent):
                 # Specify the file path where you want to save the text file
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", category=FutureWarning)
-                    self.dataframe_stockdata = pd.read_json(stockdata.body,orient="split")
-                    self.offers = self.agent.strategy(self.dataframe_stockdata)
-                    #print(self.offers)
+                    dataframe_stockdata = pd.read_json(stockdata.body,orient="split")
+
+                    # instantiate strategy using strategy_num by setting it manually
+                    strategy_num = 2
+                    strategy = f'Strategy{strategy_num}'
+                    strategy_class = getattr(Strategies_classes, strategy, None)
+                    strategy = strategy_class(dataframe_stockdata)
+                    self.buy_sell_prices = strategy.execute(self.agent.jid)
+                    self.offers = pd.DataFrame(self.buy_sell_prices)
+                    print(f'{self.agent.jid} is using {strategy}')
             else:
                 print(f"{self.agent.jid} did not receive any stockdata after 10 seconds")
                 self.kill()
@@ -47,15 +55,15 @@ class Investor(Agent):
             await self.send(msg)
 
 
-    def strategy(self, dataframe_stockdata):
-        buy_price, sell_price = Strategies.strategy_one(dataframe_stockdata)
-        #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
-        orderbook_entry = {
-            "name": [self.jid[0]],
-            "sell": [sell_price],
-            "buy": [buy_price]
-        }
-        return pd.DataFrame(orderbook_entry)#,columns=["name","sell","buy"])
+    # def strategy(self, dataframe_stockdata):
+    #     buy_price, sell_price = Strategies.strategy_one(dataframe_stockdata)
+    #     #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
+    #     orderbook_entry = {
+    #         "name": [self.jid[0]],
+    #         "sell": [sell_price],
+    #         "buy": [buy_price]
+    #     }
+    #     return pd.DataFrame(orderbook_entry)#,columns=["name","sell","buy"])
 
     async def setup(self):
         print(f"{self.jid} started . . .")
