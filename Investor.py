@@ -17,7 +17,7 @@ import Strategies
 class Investor(Agent):
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
-            print('Starting  behaviour...')
+            print(f"Starting {self.agent.jid} behaviour . . .")
             self.money = 5000
             self.trade_condition = False
             self.count = 0
