@@ -21,4 +21,58 @@ def strategy_one(dataframe_stockdata):
     print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
     return buy_price, sell_price
 
-print("Hello")
+
+
+def strategy_SMA(dataframe_stockdata):
+    price_low = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Low']
+    price_high = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'High']
+    price_mean = (price_low + price_high) / 2
+
+    # Calculate a simple moving average (SMA) over the last N periods. 
+    sma_period = 25
+    sma = dataframe_stockdata[-sma_period:].mean()
+    print(f'SMA of last {sma_period} days: {sma} ')
+
+    #Buying if the mean is higher than the sma
+    if price_mean > sma :
+        buy_price = price_mean 
+    else:
+        buy_price = 0
+    #Selling if the mean is lower than the sma
+    if price_mean < sma:
+        sell_price = price_mean
+    else:
+        sell_price = 9999999999
+    print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
+    return buy_price, sell_price
+
+
+
+
+def strategy_BollingerBands(dataframe_stockdata):
+    # Define the period for Bollinger Bands calculation and the number of standard deviations
+    bb_period = 20
+    num_std_dev = 2
+
+    # Calculate the rolling mean and standard deviation of the closing prices, 
+    dataframe_stockdata['RollingMean'] = dataframe_stockdata['Close'].rolling(bb_period).mean()
+    dataframe_stockdata['RollingStd'] = dataframe_stockdata['Close'].rolling(bb_period).std()
+
+    # Calculate the upper and lower Bollinger Bands
+    dataframe_stockdata['UpperBand'] = dataframe_stockdata['RollingMean'] + (num_std_dev * dataframe_stockdata['RollingStd'])
+    dataframe_stockdata['LowerBand'] = dataframe_stockdata['RollingMean'] - (num_std_dev * dataframe_stockdata['RollingStd'])
+
+    # Determine the buy and sell signals based on Bollinger Bands
+    buy_price = 0
+    sell_price = 9999999999
+
+    if dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'] < dataframe_stockdata.at[dataframe_stockdata.index[-1], 'LowerBand']:
+        buy_price = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']
+    elif dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'] > dataframe_stockdata.at[dataframe_stockdata.index[-1], 'UpperBand']:
+        sell_price = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']
+
+    print(f'Upper Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "UpperBand"]:.2f}')
+    print(f'Lower Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "LowerBand"]:.2f}')
+    print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
+
+    return buy_price, sell_price
