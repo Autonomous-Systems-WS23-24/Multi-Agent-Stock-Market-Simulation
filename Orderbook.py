@@ -48,7 +48,7 @@ class Orderbook(Agent):
                     #print(self.dataframe_offers)
                     self.offerbook = pd.concat([self.offerbook,self.dataframe_offers],axis=0,ignore_index=True)
                 else:
-                    print("Did not receive any stockdata after 10 seconds")
+                    print("Orderbook did not receive any stockdata after 10 seconds")
             await asyncio.sleep(1)
             transaction_df = self.do_transactions()
             print(self.offerbook)
@@ -58,7 +58,7 @@ class Orderbook(Agent):
                 self.stock_data["Open"] += transaction_df["price"].sample()
                 self.stock_data["High"] += transaction_df["price"].max()
                 self.stock_data["Low"] += transaction_df["price"].min()
-            print(transaction_df)
+            #print(transaction_df)
         def do_transactions(self):
             offerbook = self.offerbook
             df_buy_sorted = offerbook.sort_values(by="buy", ascending=False).reset_index(drop=True)
