@@ -20,3 +20,5 @@ def strategy_one(dataframe_stockdata):
         sell_price = 9999999999
     print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
     return buy_price, sell_price
+
+print("Hello")
