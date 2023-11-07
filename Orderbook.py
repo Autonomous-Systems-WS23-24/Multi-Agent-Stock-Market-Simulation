@@ -52,6 +52,12 @@ class Orderbook(Agent):
             await asyncio.sleep(1)
             transaction_df = self.do_transactions()
             print(self.offerbook)
+            ############# now calculate new stockdata
+            if not transaction_df.empty:
+                self.stock_data["Close"] += transaction_df["price"].sample()
+                self.stock_data["Open"] += transaction_df["price"].sample()
+                self.stock_data["High"] += transaction_df["price"].max()
+                self.stock_data["Low"] += transaction_df["price"].min()
             print(transaction_df)
         def do_transactions(self):
             offerbook = self.offerbook
@@ -70,7 +76,7 @@ class Orderbook(Agent):
 
                 if buyer_name not in matched_buyers and seller_name not in matched_sellers and df_buy_sorted["buy"][
                     index] >= df_sell_sorted["sell"][index]:
-                    transaction_value = (df_sell_sorted["sell"][index]+ df_buy_sorted["buy"][index])/2
+                    transaction_value = (df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index])/2
                     transaction = {"buyer": buyer_name, "seller": seller_name, "price": transaction_value}
                     transactions.append(transaction)
 

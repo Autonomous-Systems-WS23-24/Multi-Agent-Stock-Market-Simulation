@@ -23,7 +23,7 @@ class Investor(Agent):
             self.count = 0
             self.stock_list = ["1"]
         async def run(self):
-            stockdata = await self.receive(timeout=10)  # wait for a message for 10 seconds
+            stockdata = await self.receive(timeout=50)  # wait for a message for 10 seconds
             if stockdata:
                 self.count += 1
                 #print("Stockdata received, count {}".format(self.count))
