@@ -16,6 +16,10 @@ import Strategies_classes
 import Strategies
 
 class Investor(Agent):
+
+    def __init__(self,jid,password,strategy):
+        super().__init__(jid, password)
+        self.strategy = strategy
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
             print(f"Starting {self.agent.jid} behaviour . . .")
@@ -34,8 +38,7 @@ class Investor(Agent):
                     dataframe_stockdata = pd.read_json(stockdata.body,orient="split")
 
                     # instantiate strategy using strategy_num by setting it manually
-                    strategy_num = 2
-                    strategy = f'Strategy{strategy_num}'
+                    strategy = f'Strategy{self.agent.strategy}'
                     strategy_class = getattr(Strategies_classes, strategy, None)
                     strategy = strategy_class(dataframe_stockdata)
                     self.buy_sell_prices = strategy.execute(self.agent.jid)

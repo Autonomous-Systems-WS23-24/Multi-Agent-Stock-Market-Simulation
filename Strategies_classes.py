@@ -54,12 +54,12 @@ class Strategy2():
     def execute(self, jid):
         #print(f'RSI: {self.RSI_value}', f'MA of alst 52 days: {self.MA52}')
         # buying when RSI value is lower than 50, and the mean price is 2 euro lower than the MA52. Buy the stock for the mean price -2
-        if self.RSI_value < 50 and self.price_mean <= (self.MA52 - 2):
+        if self.RSI_value < 5 and self.price_mean <= (self.MA52 - 2):
             self.buy_price = self.price_mean - 2
         else:
             self.buy_price = 0
         # selling when RSI value is higher than 60 or if the low price is 20 lower than MA52. Sell the stock for the mean price -20
-        if self.RSI_value > 60 or self.price_low <= (self.MA52 - 20):
+        if self.RSI_value > 10 or self.price_low <= (self.MA52 - 20):
             self.sell_price = self.price_mean - 20
         else:
             self.sell_price = 9999999
