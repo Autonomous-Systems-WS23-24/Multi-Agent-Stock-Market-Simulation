@@ -17,7 +17,7 @@ import Investor
 async def main():
     num_investors = 5
     Agent_Orderbook = Orderbook.Orderbook("Orderbook@localhost", "1234")
-    investors = [Investor.Investor(f"investor{i}@localhost", "1234",1) for i in range(1, num_investors + 1)]
+    investors = [Investor.Investor(f"investor{i}@localhost", "1234",(i%2)+1) for i in range(1, num_investors + 1)]
     tasks = []
     for investor in investors:
         tasks.append(investor.start())
@@ -27,8 +27,6 @@ async def main():
     print("Wait until user interrupts with ctrl+C")
     Agent_Orderbook.web.start(hostname="127.0.0.1", port="10000")
     await wait_until_finished(Agent_Orderbook)
-
-
 
 
 

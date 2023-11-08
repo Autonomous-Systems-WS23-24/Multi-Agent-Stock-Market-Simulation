@@ -13,7 +13,7 @@ class Strategy1():
         self.MA52 = dataframe_stockdata.at[dataframe_stockdata.index[-1], '52-day MA']
 
     def execute(self, jid):
-        print(f'RSI: {self.RSI_value}', f'MA of alst 52 days: {self.MA52}')
+        #print(f'RSI: {self.RSI_value}', f'MA of alst 52 days: {self.MA52}')
         # buying when RSI value is lower than 35, and the mean price is 5 euro lower than the MA52. Buy the stock for the mean price
         if self.RSI_value < 35 and self.price_mean <= (self.MA52 - 5):
             self.buy_price = self.price_mean - 5
@@ -35,7 +35,7 @@ class Strategy1():
             "buy": [self.buy_price]
         }
 
-        print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
+        #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
         return self.orderbook_entry
 
 
@@ -74,6 +74,6 @@ class Strategy2():
             "buy": [self.buy_price]
         }
 
-        print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
+        #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
         return self.orderbook_entry
 
