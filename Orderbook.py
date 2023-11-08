@@ -14,24 +14,29 @@ import warnings
 
 
 class Orderbook(Agent):
+
+    def __init__(self,jid,password,num_investors):
+        super().__init__(jid, password)
+        self.num_investors= num_investors
     class OrderbookBehav(CyclicBehaviour):
         async def on_start(self):
             self.list_stocks = ["zoes.us.txt"]
             print("Creating Stockmarket Data . . .")
             for stock in self.list_stocks:
                 self.stock_data = pd.read_csv('archive/Stocks/{}'.format(stock))
-                self.stock_data = stock_cue_calc(self.stock_data)[100:102]
+                self.stock_data = stock_cue_calc(self.stock_data)
                 print("calculation of cues completed!")
+                self.counter = 0
 
         async def run(self):
+            self.counter += 1
             #print("Contacting Traders")
-            num_investors = 5
-            self.investor_list = [f"investor{i}" for i in range(1,num_investors+1)]
+            self.investor_list = [f"investor{i}" for i in range(1,self.agent.num_investors+1)]
             self.offerbook = pd.DataFrame(columns= ["name","buy","sell"])
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-                msg.body = self.stock_data.to_json(orient="split")  # Set the message content
+                msg.body = self.stock_data[101+self.counter:102+self.counter].to_json(orient="split")  # Set the message content
                 await self.send(msg)
             #print("Sent stockdata to traders!")
 
