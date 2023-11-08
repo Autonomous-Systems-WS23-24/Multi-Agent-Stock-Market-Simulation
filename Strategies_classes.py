@@ -77,3 +77,38 @@ class Strategy2():
         #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
         return self.orderbook_entry
 
+
+class Strategy3():
+    def __init__(self, dataframe_stockdata):
+        # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
+        # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
+        self.sma_period = 25
+        self.price_low = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Low']
+        self.price_high = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'High']
+        self.price_mean = (self.price_low + self.price_high) / 2
+        # moving average of last 52 days
+        self.MA52 = dataframe_stockdata.at[dataframe_stockdata.index[-1], '52-day MA']
+        self.sma = dataframe_stockdata["Close"][-self.sma_period:].mean()
+    def execute(self, jid):
+        # Calculate a simple moving average (SMA) over the last N periods.
+       # print(f'SMA of last {self.sma_period} days: {self.sma} ')
+
+        # Buying if the mean is higher than the sma
+        if self.price_mean > self.sma:
+            self.buy_price = self.price_mean
+        else:
+            self.buy_price = 0
+        # Selling if the mean is lower than the sma
+        if self.price_mean < self.sma:
+            self.sell_price = self.price_mean
+        else:
+            self.sell_price = 9999999999
+        #print(f'Investor wants to sell for {self.sell_price} and buy for {self.buy_price}')
+        self.jid = jid
+        self.orderbook_entry = {
+            "name": [self.jid[0]],
+            "sell": [self.sell_price],
+            "buy": [self.buy_price]
+        }
+        #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
+        return self.orderbook_entry
