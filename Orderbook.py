@@ -30,16 +30,31 @@ class Orderbook(Agent):
 
         async def run(self):
             self.counter += 1
-            #print("Contacting Traders")
             self.investor_list = [f"investor{i}" for i in range(1,self.agent.num_investors+1)]
-            self.offerbook = pd.DataFrame(columns= ["name","buy","sell"])
+            #  send data to traders
+            await self.send_stockdata()
+            # receive their offers
+            await self.receive_offers()
+            # wait one second for each iteration for trader calculation
+            await asyncio.sleep(1)
+            # do transactions
+            self.do_transactions()
+            # send transaction data
+            await self.send_transactions()
+            #print(self.offerbook)
+
+
+
+        async def send_stockdata(self):
+            self.offerbook = pd.DataFrame(columns=["name", "buy", "sell"])
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-                msg.body = self.stock_data[101+self.counter:151+self.counter].to_json(orient="split")  # Set the message content
+                msg.body = self.stock_data[101 + self.counter:151 + self.counter].to_json(
+                    orient="split")  # Set the message content
                 await self.send(msg)
-            #print("Sent stockdata to traders!")
 
+        async def receive_offers(self):
             for i in range(len(self.investor_list)):
                 offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
                 if offers:
@@ -49,21 +64,11 @@ class Orderbook(Agent):
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore", category=FutureWarning)
                         self.dataframe_offers = pd.read_json(offers.body, orient="split")
+                        self.offerbook = pd.concat([self.offerbook, self.dataframe_offers], axis=0, ignore_index=True)
 
-                    #print(self.dataframe_offers)
-                    self.offerbook = pd.concat([self.offerbook,self.dataframe_offers],axis=0,ignore_index=True)
                 else:
                     print("Orderbook did not receive any stockdata after 10 seconds")
-            await asyncio.sleep(1)
-            transaction_df = self.do_transactions()
-            print(self.offerbook)
-            ############# now calculate new stockdata
-            if not transaction_df.empty:
-                self.stock_data["Close"] += transaction_df["price"].sample()
-                self.stock_data["Open"] += transaction_df["price"].sample()
-                self.stock_data["High"] += transaction_df["price"].max()
-                self.stock_data["Low"] += transaction_df["price"].min()
-            #print(transaction_df)
+
         def do_transactions(self):
             offerbook = self.offerbook
             df_buy_sorted = offerbook.sort_values(by="buy", ascending=False).reset_index(drop=True)
@@ -90,9 +95,35 @@ class Orderbook(Agent):
             # Convert the list of dictionaries into a DataFrame
                 else:
                     break
-            transaction_df = pd.DataFrame(transactions)
+            self.transaction_df = pd.DataFrame(transactions)
 
-            return transaction_df
+
+        async def send_transactions(self):
+            if not self.transaction_df.empty:
+                for investor in self.investor_list:
+                    msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
+                    msg.set_metadata("performative", "inform")  # Set the "query" FIPA performative
+                    msg.body = self.transaction_df.to_json(
+                        orient="split")  # Set the message content
+                    await self.send(msg)
+            else:
+                for investor in self.investor_list:
+                    msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
+                    msg.set_metadata("performative", "inform")  # Set the "query" FIPA performative
+                    msg.body = "--no transactions--"
+                    await self.send(msg)
+
+        def calc_new_stockdata(self):
+            if not self.transaction_df.empty:
+                self.stock_data["Close"] += transaction_df["price"].sample()
+                self.stock_data["Open"] += transaction_df["price"].sample()
+                self.stock_data["High"] += transaction_df["price"].max()
+                self.stock_data["Low"] += transaction_df["price"].min()
+                print(self.transaction_df)
+            else:
+                pass
+
+
     async def setup(self):
         print("Orderbook starting . . .")
         template = Template()

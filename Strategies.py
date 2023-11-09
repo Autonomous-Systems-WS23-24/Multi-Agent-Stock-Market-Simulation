@@ -1,4 +1,4 @@
-def strategy_one(dataframe_stockdata):
+def strategy1(dataframe_stockdata):
     # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
     # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
     RSI_value = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'RSI']
@@ -7,7 +7,7 @@ def strategy_one(dataframe_stockdata):
     price_mean = (price_low + price_high) / 2
     # moving average of last 52 days
     MA52 = dataframe_stockdata.at[dataframe_stockdata.index[-1], '52-day MA']
-    print(f'RSI: {RSI_value}', f'MA of alst 52 days: {MA52}')
+    #print(f'RSI: {RSI_value}', f'MA of alst 52 days: {MA52}')
     # buying when RSI value is lower than 35, and the mean price is 5 euro lower than the MA52. Buy the stock for the mean price
     if RSI_value < 35 and price_mean <= (MA52 - 5):
         buy_price = price_mean - 5
@@ -18,20 +18,20 @@ def strategy_one(dataframe_stockdata):
         sell_price = price_mean
     else:
         sell_price = 9999999999
-    print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
+    #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
     return buy_price, sell_price
 
 
 
-def strategy_SMA(dataframe_stockdata):
+def strategy2(dataframe_stockdata):
     price_low = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Low']
     price_high = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'High']
     price_mean = (price_low + price_high) / 2
 
     # Calculate a simple moving average (SMA) over the last N periods. 
     sma_period = 25
-    sma = dataframe_stockdata[-sma_period:].mean()
-    print(f'SMA of last {sma_period} days: {sma} ')
+    sma = dataframe_stockdata["Close"][-sma_period:].mean()
+    #print(f'SMA of last {sma_period} days: {sma} ')
 
     #Buying if the mean is higher than the sma
     if price_mean > sma :
@@ -43,13 +43,13 @@ def strategy_SMA(dataframe_stockdata):
         sell_price = price_mean
     else:
         sell_price = 9999999999
-    print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
+    #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
     return buy_price, sell_price
 
 
 
 
-def strategy_BollingerBands(dataframe_stockdata):
+def strategy3(dataframe_stockdata):
     # Define the period for Bollinger Bands calculation and the number of standard deviations
     bb_period = 20
     num_std_dev = 2
@@ -71,14 +71,14 @@ def strategy_BollingerBands(dataframe_stockdata):
     elif dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'] > dataframe_stockdata.at[dataframe_stockdata.index[-1], 'UpperBand']:
         sell_price = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']
 
-    print(f'Upper Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "UpperBand"]:.2f}')
-    print(f'Lower Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "LowerBand"]:.2f}')
-    print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
+    #print(f'Upper Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "UpperBand"]:.2f}')
+    #print(f'Lower Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "LowerBand"]:.2f}')
+    #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
 
     return buy_price, sell_price
 
 
-def strategy_MACD(dataframe_stockdata):
+def strategy4(dataframe_stockdata):
     # Define the short-term and long-term periods for the EMA calculation
     short_term_period = 12
     long_term_period = 26
@@ -105,8 +105,8 @@ def strategy_MACD(dataframe_stockdata):
     elif macd_line.iloc[-1] < signal_line.iloc[-1] and macd_line.iloc[-2] >= signal_line.iloc[-2]:
         sell_price = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']
 
-    print(f'MACD Line: {macd_line.iloc[-1]:.2f}')
-    print(f'Signal Line: {signal_line.iloc[-1]:.2f}')
-    print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
+   # print(f'MACD Line: {macd_line.iloc[-1]:.2f}')
+    #print(f'Signal Line: {signal_line.iloc[-1]:.2f}')
+    #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
 
     return buy_price, sell_price

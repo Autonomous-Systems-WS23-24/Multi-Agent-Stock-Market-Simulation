@@ -13,7 +13,7 @@ import Investor
 
 
 async def main():
-    num_investors = 3
+    num_investors = 4
     Agent_Orderbook = Orderbook.Orderbook("Orderbook@localhost", "1234",num_investors)
     investors = [Investor.Investor(f"investor{i}@localhost", "1234",(i%3)+1) for i in range(1, num_investors + 1)]
     tasks = []
