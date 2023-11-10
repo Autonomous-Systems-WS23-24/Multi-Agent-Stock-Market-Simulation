@@ -22,10 +22,10 @@ class Investor(Agent):
         self.strategy = strategy
         self.risk_factor = risk_factor
         self.networth_list = []
+        self.money = 500
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
             print(f"Starting {self.agent.jid} behaviour . . .")
-            self.money = 500
             self.stock_count = 25
             self.count = 0
             self.stock_list = ["1"]
@@ -36,10 +36,16 @@ class Investor(Agent):
             await self.orderbook_send()
             # receive transactions done
             await self.transactions_process()
+            if self.count == 100:
+                self.kill()
 
         async def on_end(self):
             x = np.arange(0,len(self.agent.networth_list))
-            plt.plot(x,self.agent.networth_list)
+            plt.xlabel("days")
+            plt.ylabel("networth")
+            plt.plot(x,self.agent.networth_list, label= f"Networth of {self.agent.jid[0]}")
+            plt.ylim(0,max(self.agent.networth_list)*1.1)
+            plt.legend()
             plt.show()
 
         async def stockdata_receive(self):
@@ -55,14 +61,14 @@ class Investor(Agent):
                     # instantiate strategy using strategy_num by setting it manually
                     strategy = f'strategy{self.agent.strategy}'
                     strategy_func = getattr(Strategies, strategy, None)
-                    buy, sell = strategy_func(dataframe_stockdata,self.agent.risk_factor)
+                    buy, sell = strategy_func(dataframe_stockdata,self.agent.risk_factor,self.agent.money)
                     orderbook_entry = {
                         "name": [self.agent.jid[0]],
                         "sell": [sell],
                         "buy": [buy]
                     }
                     self.orderbook_entry = pd.DataFrame(orderbook_entry)
-                    current_networth = round(self.money + self.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'])
+                    current_networth = round(self.agent.money + self.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'])
                     #print(f"{self.agent.jid} has {current_networth} Dollars of networth")
                     self.agent.networth_list.append(current_networth)
             else:
@@ -89,12 +95,12 @@ class Investor(Agent):
                         df_transactions = pd.read_json(transactions.body, orient="split")
                     buys = df_transactions['buyer'].str.contains(str(self.agent.jid[0]))
                     sells = df_transactions['seller'].str.contains(str(self.agent.jid[0]))
-                    for money in df_transactions["price"][buys]:
-                        self.money -= money
+                    for price in df_transactions["price"][buys]:
+                        self.agent.money -= price
                         self.stock_count += 1
                         #print("Agent" + str(self.agent.jid[0]) + "has" + str(self.money))
-                    for money in df_transactions["price"][sells]:
-                        self.money += money
+                    for price in df_transactions["price"][sells]:
+                        self.agent.money += price
                         self.stock_count -= 1
                         #print("Agent" + str(self.agent.jid[0]) + "has" + str(self.money))
     async def setup(self):

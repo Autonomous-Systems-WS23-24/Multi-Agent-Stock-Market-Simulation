@@ -20,15 +20,14 @@ class Data_Visualizer(Agent):
         self.num_investors= num_investors
     class OrderbookBehav(CyclicBehaviour):
         async def on_start(self):
-
+            pass
 
         async def run(self):
-
+            pass
 
 
         async def send_stockdata(self):
-
-
+            pass
 
 
 
