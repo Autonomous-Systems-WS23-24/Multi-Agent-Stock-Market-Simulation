@@ -17,14 +17,16 @@ import Strategies
 
 class Investor(Agent):
 
-    def __init__(self,jid,password,strategy):
+    def __init__(self,jid,password,strategy,risk_factor):
         super().__init__(jid, password)
         self.strategy = strategy
+        self.risk_factor = risk_factor
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
             print(f"Starting {self.agent.jid} behaviour . . .")
-            self.money = 5000
-            self.stock_count = 100
+            self.money = 500
+            self.stock_count = 25
+            self.networth = 0
             self.count = 0
             self.stock_list = ["1"]
         async def run(self):
@@ -48,14 +50,16 @@ class Investor(Agent):
                     # instantiate strategy using strategy_num by setting it manually
                     strategy = f'strategy{self.agent.strategy}'
                     strategy_func = getattr(Strategies, strategy, None)
-                    buy, sell = strategy_func(dataframe_stockdata)
+                    buy, sell = strategy_func(dataframe_stockdata,self.agent.risk_factor)
                     orderbook_entry = {
                         "name": [self.agent.jid[0]],
                         "sell": [sell],
                         "buy": [buy]
                     }
                     self.orderbook_entry = pd.DataFrame(orderbook_entry)
-                    # print(f'{self.agent.jid} is using {strategy}')
+                    self.networth = round(self.money + self.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'])
+                    print(f"{self.agent.jid} has {self.networth} Dollars of networth")
+
             else:
                 print(f"{self.agent.jid} did not receive any stockdata after 10 seconds")
                 self.kill()
@@ -82,10 +86,12 @@ class Investor(Agent):
                     sells = df_transactions['seller'].str.contains(str(self.agent.jid[0]))
                     for money in df_transactions["price"][buys]:
                         self.money -= money
-                        print("Agent" + str(self.agent.jid[0]) + "has" + str(self.money))
+                        self.stock_count += 1
+                        #print("Agent" + str(self.agent.jid[0]) + "has" + str(self.money))
                     for money in df_transactions["price"][sells]:
                         self.money += money
-                        print("Agent" + str(self.agent.jid[0]) + "has" + str(self.money))
+                        self.stock_count -= 1
+                        #print("Agent" + str(self.agent.jid[0]) + "has" + str(self.money))
     async def setup(self):
         print(f"{self.jid} started . . .")
         b = self.InvestBehav()

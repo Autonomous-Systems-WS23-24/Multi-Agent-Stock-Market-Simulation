@@ -36,7 +36,7 @@ class Orderbook(Agent):
             # receive their offers
             await self.receive_offers()
             # wait one second for each iteration for trader calculation
-            await asyncio.sleep(1)
+            #await asyncio.sleep(0.1)
             # do transactions
             self.do_transactions()
             # send transaction data
@@ -86,7 +86,7 @@ class Orderbook(Agent):
 
                 if buyer_name not in matched_buyers and seller_name not in matched_sellers and df_buy_sorted["buy"][
                     index] >= df_sell_sorted["sell"][index]:
-                    transaction_value = (df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index])/2
+                    transaction_value = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index])/2)
                     transaction = {"buyer": buyer_name, "seller": seller_name, "price": transaction_value}
                     transactions.append(transaction)
 
