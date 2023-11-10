@@ -21,12 +21,12 @@ class Investor(Agent):
         super().__init__(jid, password)
         self.strategy = strategy
         self.risk_factor = risk_factor
+        self.networth_list = []
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
             print(f"Starting {self.agent.jid} behaviour . . .")
             self.money = 500
             self.stock_count = 25
-            self.networth = 0
             self.count = 0
             self.stock_list = ["1"]
         async def run(self):
@@ -36,6 +36,11 @@ class Investor(Agent):
             await self.orderbook_send()
             # receive transactions done
             await self.transactions_process()
+
+        async def on_end(self):
+            x = np.arange(0,len(self.agent.networth_list))
+            plt.plot(x,self.agent.networth_list)
+            plt.show()
 
         async def stockdata_receive(self):
             stockdata = await self.receive(timeout=10)  # wait for a message for 10 seconds
@@ -57,9 +62,9 @@ class Investor(Agent):
                         "buy": [buy]
                     }
                     self.orderbook_entry = pd.DataFrame(orderbook_entry)
-                    self.networth = round(self.money + self.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'])
-                    print(f"{self.agent.jid} has {self.networth} Dollars of networth")
-
+                    current_networth = round(self.money + self.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'])
+                    #print(f"{self.agent.jid} has {current_networth} Dollars of networth")
+                    self.agent.networth_list.append(current_networth)
             else:
                 print(f"{self.agent.jid} did not receive any stockdata after 10 seconds")
                 self.kill()
