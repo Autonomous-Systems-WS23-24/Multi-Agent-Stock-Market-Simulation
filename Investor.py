@@ -98,11 +98,9 @@ class Investor(Agent):
                     for price in df_transactions["price"][buys]:
                         self.agent.money -= price
                         self.stock_count += 1
-                        #print("Agent" + str(self.agent.jid[0]) + "has" + str(self.money))
                     for price in df_transactions["price"][sells]:
                         self.agent.money += price
                         self.stock_count -= 1
-                        #print("Agent" + str(self.agent.jid[0]) + "has" + str(self.money))
     async def setup(self):
         print(f"{self.jid} started . . .")
         b = self.InvestBehav()

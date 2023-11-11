@@ -26,10 +26,10 @@ class Orderbook(Agent):
                 self.stock_data = pd.read_csv('archive/Stocks/{}'.format(stock))
                 self.stock_data = stock_cue_calc(self.stock_data)
                 print("calculation of cues completed!")
-                self.counter = 0
+                self.count = 0
 
         async def run(self):
-            self.counter += 1
+            self.count += 1
             self.investor_list = [f"investor{i}" for i in range(1,self.agent.num_investors+1)]
             #  send data to traders
             await self.send_stockdata()
@@ -42,6 +42,8 @@ class Orderbook(Agent):
             # send transaction data
             await self.send_transactions()
             #print(self.offerbook)
+            if self.count == 100:
+                self.kill()
 
 
 
@@ -50,7 +52,7 @@ class Orderbook(Agent):
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-                msg.body = self.stock_data[101 + self.counter:151 + self.counter].to_json(
+                msg.body = self.stock_data[101 + self.count:151 + self.count].to_json(
                     orient="split")  # Set the message content
                 await self.send(msg)
 
