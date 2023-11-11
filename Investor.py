@@ -17,13 +17,14 @@ import Strategies
 
 class Investor(Agent):
 
-    def __init__(self,jid,password,strategy,risk_factor):
+    def __init__(self,jid,password,strategy,risk_factor,num_iterations=1000):
         super().__init__(jid, password)
         self.strategy = strategy
         self.risk_factor = risk_factor
         self.networth_list = []
         self.stock_count = 100
         self.money = 500
+        self.num_iterations = num_iterations
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
             print(f"Starting {self.agent.jid} behaviour . . .")
@@ -36,7 +37,7 @@ class Investor(Agent):
             await self.orderbook_send()
             # receive transactions done
             await self.transactions_process()
-            if self.count == 1000:
+            if self.count == self.agent.num_iterations:
                 self.kill()
 
         async def on_end(self):

@@ -15,9 +15,10 @@ import warnings
 
 class Orderbook(Agent):
 
-    def __init__(self,jid,password,num_investors):
+    def __init__(self,jid,password,num_investors,num_iterations=1000):
         super().__init__(jid, password)
         self.num_investors= num_investors
+        self.num_iterations = num_iterations
     class OrderbookBehav(CyclicBehaviour):
         async def on_start(self):
             self.list_stocks = ["zoes.us.txt"]
@@ -42,7 +43,7 @@ class Orderbook(Agent):
             # send transaction data
             await self.send_transactions()
             #print(self.offerbook)
-            if self.count == 100:
+            if self.count == self.agent.num_iterations:
                 self.kill()
 
 
