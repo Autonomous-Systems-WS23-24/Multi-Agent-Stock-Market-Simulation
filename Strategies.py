@@ -1,4 +1,4 @@
-def strategy1(dataframe_stockdata,risk_factor,money):
+def strategy1(dataframe_stockdata,risk_factor,money,stock_count):
     # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
     # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
     RSI_value = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'RSI']
@@ -14,7 +14,7 @@ def strategy1(dataframe_stockdata,risk_factor,money):
     else:
         buy_price = 0
     # selling when RSI value is higher than 40 or if the low price is 5 lower than MA52. Sell the stock for the mean price
-    if RSI_value > 40 or price_low <= (MA52 - 5/risk_factor):
+    if RSI_value > 40 or price_low <= (MA52 - 5/risk_factor) and stock_count>0:
         sell_price = price_mean
     else:
         sell_price = 9999999999
@@ -23,7 +23,7 @@ def strategy1(dataframe_stockdata,risk_factor,money):
 
 
 
-def strategy2(dataframe_stockdata,risk_factor,money):
+def strategy2(dataframe_stockdata,risk_factor,money,stock_count):
     price_low = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Low']
     price_high = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'High']
     price_mean = (price_low + price_high) / 2
@@ -39,7 +39,7 @@ def strategy2(dataframe_stockdata,risk_factor,money):
     else:
         buy_price = 0
     #Selling if the mean is lower than the sma
-    if price_mean*risk_factor > sma:
+    if price_mean*risk_factor > sma and stock_count>0:
         sell_price = price_mean
     else:
         sell_price = 9999999999
@@ -49,7 +49,7 @@ def strategy2(dataframe_stockdata,risk_factor,money):
 
 
 
-def strategy3(dataframe_stockdata,risk_factor,money):
+def strategy3(dataframe_stockdata,risk_factor,money,stock_count):
     # Define the period for Bollinger Bands calculation and the number of standard deviations
     bb_period = 20
     num_std_dev = 2
@@ -68,7 +68,7 @@ def strategy3(dataframe_stockdata,risk_factor,money):
 
     if dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'] < dataframe_stockdata.at[dataframe_stockdata.index[-1], 'LowerBand']*risk_factor and money >= dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']:
         buy_price = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']
-    elif dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'] > dataframe_stockdata.at[dataframe_stockdata.index[-1], 'UpperBand']*risk_factor:
+    elif dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'] > dataframe_stockdata.at[dataframe_stockdata.index[-1], 'UpperBand']*risk_factor and stock_count>0:
         sell_price = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']
 
     #print(f'Upper Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "UpperBand"]:.2f}')
@@ -78,7 +78,7 @@ def strategy3(dataframe_stockdata,risk_factor,money):
     return buy_price, sell_price
 
 
-def strategy4(dataframe_stockdata,risk_factor,money):
+def strategy4(dataframe_stockdata,risk_factor,money,stock_count):
     # Define the short-term and long-term periods for the EMA calculation
     short_term_period = 12
     long_term_period = 26
@@ -102,7 +102,7 @@ def strategy4(dataframe_stockdata,risk_factor,money):
 
     if macd_line.iloc[-1]*risk_factor > signal_line.iloc[-1] and macd_line.iloc[-2] <= signal_line.iloc[-2]*risk_factor and money >= dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']:
         buy_price = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']
-    elif macd_line.iloc[-1]*risk_factor < signal_line.iloc[-1] and macd_line.iloc[-2] >= signal_line.iloc[-2]*risk_factor:
+    elif macd_line.iloc[-1]*risk_factor < signal_line.iloc[-1] and macd_line.iloc[-2] >= signal_line.iloc[-2]*risk_factor and stock_count>0:
         sell_price = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close']
 
    # print(f'MACD Line: {macd_line.iloc[-1]:.2f}')

@@ -22,11 +22,11 @@ class Investor(Agent):
         self.strategy = strategy
         self.risk_factor = risk_factor
         self.networth_list = []
+        self.stock_count = 100
         self.money = 500
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
             print(f"Starting {self.agent.jid} behaviour . . .")
-            self.stock_count = 25
             self.count = 0
             self.stock_list = ["1"]
         async def run(self):
@@ -36,7 +36,7 @@ class Investor(Agent):
             await self.orderbook_send()
             # receive transactions done
             await self.transactions_process()
-            if self.count == 100:
+            if self.count == 1000:
                 self.kill()
 
         async def on_end(self):
@@ -61,14 +61,14 @@ class Investor(Agent):
                     # instantiate strategy using strategy_num by setting it manually
                     strategy = f'strategy{self.agent.strategy}'
                     strategy_func = getattr(Strategies, strategy, None)
-                    buy, sell = strategy_func(dataframe_stockdata,self.agent.risk_factor,self.agent.money)
+                    buy, sell = strategy_func(dataframe_stockdata,self.agent.risk_factor,self.agent.money,self.agent.stock_count)
                     orderbook_entry = {
                         "name": [self.agent.jid[0]],
                         "sell": [sell],
                         "buy": [buy]
                     }
                     self.orderbook_entry = pd.DataFrame(orderbook_entry)
-                    current_networth = round(self.agent.money + self.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'])
+                    current_networth = round(self.agent.money + self.agent.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'])
                     #print(f"{self.agent.jid} has {current_networth} Dollars of networth")
                     self.agent.networth_list.append(current_networth)
             else:
@@ -97,10 +97,10 @@ class Investor(Agent):
                     sells = df_transactions['seller'].str.contains(str(self.agent.jid[0]))
                     for price in df_transactions["price"][buys]:
                         self.agent.money -= price
-                        self.stock_count += 1
+                        self.agent.stock_count += 1
                     for price in df_transactions["price"][sells]:
                         self.agent.money += price
-                        self.stock_count -= 1
+                        self.agent.stock_count -= 1
     async def setup(self):
         print(f"{self.jid} started . . .")
         b = self.InvestBehav()
