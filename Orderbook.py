@@ -10,6 +10,7 @@ from spade.message import Message
 from spade.template import Template
 import json
 import warnings
+import random as rd
 
 
 class Orderbook(Agent):
@@ -23,7 +24,8 @@ class Orderbook(Agent):
             self.list_stocks = ["zoes.us.txt"]
             print("Creating Stockmarket Data . . .")
             for stock in self.list_stocks:
-                self.stock_data = pd.read_csv('archive/Stocks/{}'.format(stock))
+                self.stock_data_history = pd.read_csv('archive/Stocks/{}'.format(stock))
+                self.stock_data = self.stock_data_history[10:60]
                 self.count = 1
 
         async def run(self):
@@ -40,10 +42,19 @@ class Orderbook(Agent):
             # send transaction data
             await self.send_transactions()
             #print(self.offerbook)
-            #self.calc_new_stockdata()
+            self.calc_new_stockdata()
             if self.count == self.agent.num_iterations:
                 self.kill()
 
+        async def on_end(self):
+            x = np.arange(0, len(self.stock_data["Close"].to_list()))
+            y = self.stock_data["Close"].to_list()
+            plt.xlabel("days")
+            plt.ylabel("value")
+            plt.plot(x,y, label=f"Stock value")
+            plt.ylim(0, max(y) * 1.1)
+            plt.legend()
+            plt.show()
 
 
         async def send_stockdata(self):
@@ -51,7 +62,7 @@ class Orderbook(Agent):
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-                msg.body = self.stock_data[101 + self.count:151 + self.count].to_json(
+                msg.body = self.stock_data.to_json(
                     orient="split")  # Set the message content
                 await self.send(msg)
 
@@ -87,7 +98,7 @@ class Orderbook(Agent):
 
                 if buyer_name not in matched_buyers and seller_name not in matched_sellers and df_buy_sorted["buy"][
                     index] >= df_sell_sorted["sell"][index]:
-                    transaction_value = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index])/2)
+                    transaction_value = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index])/2,2)
                     transaction = {"buyer": buyer_name, "seller": seller_name, "price": transaction_value}
                     transactions.append(transaction)
 
@@ -104,8 +115,7 @@ class Orderbook(Agent):
                 for investor in self.investor_list:
                     msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                     msg.set_metadata("performative", "inform")  # Set the "query" FIPA performative
-                    msg.body = self.transaction_df.to_json(
-                        orient="split")  # Set the message content
+                    msg.body = self.transaction_df.to_json(orient="split")  # Set the message content
                     await self.send(msg)
             else:
                 for investor in self.investor_list:
@@ -116,15 +126,26 @@ class Orderbook(Agent):
 
         def calc_new_stockdata(self):
             if not self.transaction_df.empty:
-                self.stock_data["Close"] += transaction_df["price"].sample()
-                self.stock_data["Open"] += transaction_df["price"].sample()
-                self.stock_data["High"] += transaction_df["price"].max()
-                self.stock_data["Low"] += transaction_df["price"].min()
-                print(self.transaction_df)
+                print("Transactions!")
+                close = rd.choice(self.transaction_df["price"].tolist())
+                open = rd.choice(self.transaction_df["price"].tolist())
+                low = self.transaction_df["price"].min()*rd.randrange(90,100)/100
+                high = (self.transaction_df["price"].max()*rd.randrange(100,110))/100
+                new_data = pd.DataFrame({"Close":close,"Open":open,"High": high,"Low":low},index=[0])
+                self.stock_data = pd.concat([self.stock_data,new_data],ignore_index=True)
+
             else:
-                pass
-
-
+                print("No transactions! Creating artificial Data!")
+                mean = (self.stock_data.at[self.stock_data.index[-1],"Low"]+ self.stock_data.at[self.stock_data.index[-1],"High"])/2
+                var = self.stock_data['Close'].rolling(25).std().mean()
+                print(var)
+                random_price_data = np.random.normal(mean,var,20)
+                close = random_price_data[-1]
+                open = random_price_data[0]
+                low = random_price_data.min()
+                high = random_price_data.max()
+                new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low},index=[0])
+                self.stock_data = pd.concat([self.stock_data, new_data],ignore_index=True)
     async def setup(self):
         print("Orderbook starting . . .")
         template = Template()
