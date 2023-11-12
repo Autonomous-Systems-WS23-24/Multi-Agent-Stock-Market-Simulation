@@ -108,3 +108,5 @@ class Investor(Agent):
         template = Template()
         template.set_metadata("performative", "inform")
         self.add_behaviour(b, template)
+
+
