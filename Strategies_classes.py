@@ -80,8 +80,6 @@ class Strategy2():
 
 class Strategy3():
     def __init__(self, dataframe_stockdata):
-        # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
-        # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
         self.sma_period = 25
         self.price_low = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Low']
         self.price_high = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'High']
@@ -103,7 +101,10 @@ class Strategy3():
             self.sell_price = self.price_mean
         else:
             self.sell_price = 9999999999
-        #print(f'Investor wants to sell for {self.sell_price} and buy for {self.buy_price}')
+        
+        if self.buy_price >= self.sell_price:
+            self.sell_price = 9999999
+
         self.jid = jid
         self.orderbook_entry = {
             "name": [self.jid[0]],
