@@ -68,7 +68,7 @@ def strategy3(stockdata,risk_factor,money,stock_count):
     if stockdata.at[stockdata.index[-1], 'Close'] < stockdata.at[stockdata.index[-1], 'LowerBand']*risk_factor and money >= stockdata.at[stockdata.index[-1], 'Close']:
         buy_price = stockdata.at[stockdata.index[-1], 'Close']
     elif stockdata.at[stockdata.index[-1], 'Close'] > stockdata.at[stockdata.index[-1], 'UpperBand']*risk_factor and stock_count>0:
-        sell_price = stockdata.at[stockdata.index[-1], 'Close']
+        sell_price = stockdata.at[stockdata.index[-1], 'Close']*1.1
 
     #print(f'Upper Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "UpperBand"]:.2f}')
     #print(f'Lower Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "LowerBand"]:.2f}')

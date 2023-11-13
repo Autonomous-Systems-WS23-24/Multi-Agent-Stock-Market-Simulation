@@ -137,8 +137,7 @@ class Orderbook(Agent):
             else:
                 print("No transactions! Creating artificial Data!")
                 mean = (self.stock_data.at[self.stock_data.index[-1],"Low"]+ self.stock_data.at[self.stock_data.index[-1],"High"])/2
-                var = self.stock_data['Close'].rolling(25).std().mean()
-                print(var)
+                var = self.stock_data['Close'].rolling(10).std().mean()
                 random_price_data = np.random.normal(mean,var,20)
                 close = random_price_data[-1]
                 open = random_price_data[0]
