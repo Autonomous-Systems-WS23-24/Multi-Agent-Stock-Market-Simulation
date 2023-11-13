@@ -17,60 +17,96 @@ import Strategies
 
 class Investor(Agent):
 
-    def __init__(self,jid,password,strategy):
+    def __init__(self,jid,password,strategy,risk_factor,num_iterations=1000):
         super().__init__(jid, password)
         self.strategy = strategy
+        self.risk_factor = risk_factor
+        self.networth_list = []
+        self.stock_count = 100
+        self.money = 500
+        self.num_iterations = num_iterations
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
             print(f"Starting {self.agent.jid} behaviour . . .")
-            self.money = 5000
-            self.trade_condition = False
             self.count = 0
             self.stock_list = ["1"]
         async def run(self):
-            stockdata = await self.receive(timeout=50)  # wait for a message for 10 seconds
+            # receive stockdata
+            await self.stockdata_receive()
+            # send orderbook entry
+            await self.orderbook_send()
+            # receive transactions done
+            await self.transactions_process()
+            if self.count == self.agent.num_iterations:
+                self.kill()
+
+        async def on_end(self):
+            x = np.arange(0,len(self.agent.networth_list))
+            plt.xlabel("days")
+            plt.ylabel("networth")
+            plt.plot(x,self.agent.networth_list, label= f"Networth of {self.agent.jid[0]}")
+            plt.ylim(0,max(self.agent.networth_list)*1.1)
+            plt.legend()
+            plt.show()
+
+        async def stockdata_receive(self):
+            stockdata = await self.receive(timeout=10)  # wait for a message for 10 seconds
             if stockdata:
                 self.count += 1
-                #print("Stockdata received, count {}".format(self.count))
+                # print("Stockdata received, count {}".format(self.count))
                 # Specify the file path where you want to save the text file
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", category=FutureWarning)
-                    dataframe_stockdata = pd.read_json(stockdata.body,orient="split")
+                    dataframe_stockdata = pd.read_json(stockdata.body, orient="split")
 
                     # instantiate strategy using strategy_num by setting it manually
-                    strategy = f'Strategy{self.agent.strategy}'
-                    strategy_class = getattr(Strategies_classes, strategy, None)
-                    strategy = strategy_class(dataframe_stockdata)
-                    self.buy_sell_prices = strategy.execute(self.agent.jid)
-                    self.offers = pd.DataFrame(self.buy_sell_prices)
-                    print(f'{self.agent.jid} is using {strategy}')
+                    strategy = f'strategy{self.agent.strategy}'
+                    strategy_func = getattr(Strategies, strategy, None)
+                    buy, sell = strategy_func(dataframe_stockdata,self.agent.risk_factor,self.agent.money,self.agent.stock_count)
+                    orderbook_entry = {
+                        "name": [self.agent.jid[0]],
+                        "sell": [sell],
+                        "buy": [buy]
+                    }
+                    self.orderbook_entry = pd.DataFrame(orderbook_entry)
+                    current_networth = round(self.agent.money + self.agent.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'])
+                    #print(f"{self.agent.jid} has {current_networth} Dollars of networth")
+                    self.agent.networth_list.append(current_networth)
             else:
                 print(f"{self.agent.jid} did not receive any stockdata after 10 seconds")
                 self.kill()
 
-
-            #print("Sending Buy and Sell Offers")
+        async def orderbook_send(self):
+            # print("Sending Buy and Sell Offers")
             msg = Message(to="Orderbook@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
             msg.set_metadata("ontology", "myOntology")  # Set the ontology of the message content
             msg.set_metadata("language", "OWL-S")  # Set the language of the message content
-            msg.body = self.offers.to_json(orient="split")  # Set the message content
+            msg.body = self.orderbook_entry.to_json(orient="split")  # Set the message content
             await self.send(msg)
 
-
-    # def strategy(self, dataframe_stockdata):
-    #     buy_price, sell_price = Strategies.strategy_one(dataframe_stockdata)
-    #     #print(f'{self.jid} wants to sell for {self.sell_price} and buy for {self.buy_price}')
-    #     orderbook_entry = {
-    #         "name": [self.jid[0]],
-    #         "sell": [sell_price],
-    #         "buy": [buy_price]
-    #     }
-    #     return pd.DataFrame(orderbook_entry)#,columns=["name","sell","buy"])
-
+        async def transactions_process(self):
+            transactions = await self.receive(timeout=10)  # wait for a message for 10 seconds
+            if transactions:
+                if "no" in transactions.body:
+                    pass
+                else:
+                    with warnings.catch_warnings():
+                        warnings.filterwarnings("ignore", category=FutureWarning)
+                        df_transactions = pd.read_json(transactions.body, orient="split")
+                    buys = df_transactions['buyer'].str.contains(str(self.agent.jid[0]))
+                    sells = df_transactions['seller'].str.contains(str(self.agent.jid[0]))
+                    for price in df_transactions["price"][buys]:
+                        self.agent.money -= price
+                        self.agent.stock_count += 1
+                    for price in df_transactions["price"][sells]:
+                        self.agent.money += price
+                        self.agent.stock_count -= 1
     async def setup(self):
         print(f"{self.jid} started . . .")
         b = self.InvestBehav()
         template = Template()
         template.set_metadata("performative", "inform")
         self.add_behaviour(b, template)
+
+

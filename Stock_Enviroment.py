@@ -13,9 +13,11 @@ import Investor
 
 
 async def main():
-    num_investors = 3
-    Agent_Orderbook = Orderbook.Orderbook("Orderbook@localhost", "1234",num_investors)
-    investors = [Investor.Investor(f"investor{i}@localhost", "1234",(i%3)+1) for i in range(1, num_investors + 1)]
+    num_investors = 20
+    num_iterations = 1000
+    risk_factors = np.arange(1,3.1,0.1)
+    Agent_Orderbook = Orderbook.Orderbook("Orderbook@localhost", "1234",num_investors,num_iterations=num_iterations)
+    investors = [Investor.Investor(f"investor{i}@localhost", "1234",(i%4)+1,risk_factors[i],num_iterations=num_iterations) for i in range(1, num_investors + 1)]
     tasks = []
     for investor in investors:
         tasks.append(investor.start())

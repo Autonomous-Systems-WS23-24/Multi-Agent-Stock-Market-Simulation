@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 
 class Strategy1():
+    def __str__(self):
+        return 'Strategy 1'
     def __init__(self, dataframe_stockdata):
         # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
         # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
@@ -41,6 +43,8 @@ class Strategy1():
 
 
 class Strategy2():
+    def __str__(self):
+        return 'Strategy 2'
     def __init__(self, dataframe_stockdata):
         # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
         # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
@@ -79,6 +83,8 @@ class Strategy2():
 
 
 class Strategy3():
+    def __str__(self):
+        return 'Strategy 3'
     def __init__(self, dataframe_stockdata):
         self.sma_period = 25
         self.price_low = dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Low']
