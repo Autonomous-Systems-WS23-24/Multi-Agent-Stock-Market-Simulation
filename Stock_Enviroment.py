@@ -9,12 +9,13 @@ from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 import Orderbook
+import Orderbook_historical_data
 import Investor
 
 
 async def main():
     num_investors = 20
-    num_iterations = 1000
+    num_iterations = 100
     risk_factors = np.arange(1,3.1,0.1)
     money_list = []
     stock_list = []
