@@ -22,15 +22,37 @@ class Environment():
         self.orderbook_buy_offers = {}
         self.transaction_list_one_day = {}
         for stock in self.list_stocks:
-            self.stock_candles[f'{stock}'] = pd.read_csv('archive/Stocks/{}'.format(stock))[:52]
-            self.orderbook_sell_offers[f"{stock}"] = pd.DataFrame(columns=["name", "sell"])
-            self.orderbook_buy_offers[f"{stock}"] = pd.DataFrame(columns=["name", "buy"])
-            self.transaction_list_one_day[f"{stock}"] = []
+            self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[:52]
+            self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
+            self.orderbook_buy_offers[stock] = pd.DataFrame(columns=["name", "buy"])
+            self.transaction_list_one_day[stock] = []
 
-    def append_daily_transaction(self,stock_name):
-        self.
+    def append_daily_transaction(self,stock_name,price):
+        self.transaction_list_one_day[stock_name].append(price)
 
+    def create_candles(self):
+        for stock in self.list_stocks:
+            if len(self.transaction_list_one_day)>0:
+                open = self.transaction_list_one_day[stock][0]
+                close = self.transaction_list_one_day[stock][-1]
+                high = max(self.transaction_list_one_day[stock])
+                low = min(self.transaction_list_one_day[stock])
+                new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
+                self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
+                self.transaction_list_one_day[stock] = []
 
+            else:
+                print(f"No Transactions tody for stock {stock}! Creating artificial data!")
+                mean = (self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "Low"] + self.stock_candles[stock].at[
+                    self.stock_candles[stock].index[-1], "High"]) / 2
+                var = self.stock_candles[stock]['Close'].rolling(10).std().mean()
+                random_price_data = np.random.normal(mean, var, 20)
+                close = random_price_data[-1]
+                open = random_price_data[0]
+                low = random_price_data.min()
+                high = random_price_data.max()
+                new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
+                self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
 
 
 
