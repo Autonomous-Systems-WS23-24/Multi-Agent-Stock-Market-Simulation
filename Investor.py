@@ -17,9 +17,12 @@ import Strategies
 
 class Investor(Agent):
 
-    def __init__(self,jid,password,strategy,stock,money,risk_factor,num_iterations=1000):
+    def __init__(self,jid,password,environment,strategy,stock,money,risk_factor,num_iterations=1000):
         super().__init__(jid, password)
+        self.environment = environment
         self.strategy = strategy
+        self.diversification_factor = 1
+        self.social_influence_dict = {}
         self.risk_factor = risk_factor
         self.networth_list = []
         self.asset_networth_list = []
@@ -33,12 +36,11 @@ class Investor(Agent):
             self.count = 0
             self.stock_list = ["1"]
         async def run(self):
-            # receive stockdata
-            await self.stockdata_receive_and_order()
-            # send orderbook entry
-            await self.orderbook_send()
+            # look at stockdata and receive orders
+            await self.send_orders()
+            # look if you sold some stock
+            await self.ownership_update()
             # receive transactions done
-            await self.transactions_process()
             self.count += 1
             if self.count == self.agent.num_iterations:
                 self.kill()
@@ -62,63 +64,30 @@ class Investor(Agent):
             plt.tight_layout()
             plt.show()
 
-
-        async def stockdata_receive_and_order(self):
-            stockdata = await self.receive(timeout=10)  # wait for a message for 10 seconds
-            if stockdata:
-                # print("Stockdata received, count {}".format(self.count))
-                # Specify the file path where you want to save the text file
-                with warnings.catch_warnings():
-                    warnings.filterwarnings("ignore", category=FutureWarning)
-                    dataframe_stockdata = pd.read_json(stockdata.body, orient="split")
-
-                    # instantiate strategy using strategy_num by setting it manually
-                    strategy = f'strategy{self.agent.strategy}'
-                    strategy_func = getattr(Strategies, strategy, None)
-                    buy, sell, n = strategy_func(dataframe_stockdata,self.agent.risk_factor,self.agent.money,self.agent.stock_count)
-                    orderbook_entry = {
-                        "name": [self.agent.jid[0]],
-                        "sell": [sell],
-                        "buy": [buy]
-                    }
-                    self.orderbook_entry = pd.DataFrame(orderbook_entry)
-                    self.orderbook_entry = pd.concat([self.orderbook_entry]*n, ignore_index=True)
-                    current_networth = round(self.agent.money + self.agent.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'],2)
-                    asset_networth = round(self.agent.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'],2)
-                    #print(f"{self.agent.jid} has {current_networth} Dollars of networth")
-                    self.agent.networth_list.append(current_networth)
-                    self.agent.asset_networth_list.append(asset_networth)
-                    self.agent.money_list.append(self.agent.money)
-            else:
-                print(f"{self.agent.jid} did not receive any stockdata after 10 seconds")
-                self.kill()
-
-        async def orderbook_send(self):
-            # print("Sending Buy and Sell Offers")
-            msg = Message(to="Orderbook@localhost")  # Instantiate the message
+        async def send_orders(self):
+            stockdata = self.agent.environment.stock_candles  # wait for a message for 10 seconds
+            # instantiate strategy using strategy_num by setting it manually
+            strategy = f'strategy{self.agent.strategy}'
+            strategy_func = getattr(Strategies, strategy, None)
+            order = strategy_func(stockdata,self.agent.risk_factor,self.agent.money,self.agent.stock_count,self.agent.diversification_factor,self.agent.social_influence_dict)
+            msg = Message(to="Broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-            msg.set_metadata("ontology", "myOntology")  # Set the ontology of the message content
-            msg.set_metadata("language", "OWL-S")  # Set the language of the message content
-            msg.body = self.orderbook_entry.to_json(orient="split")  # Set the message content
+            msg.body = order.to_json(orient="split")  # Set the message content
             await self.send(msg)
 
-        async def transactions_process(self):
-            transactions = await self.receive(timeout=10)  # wait for a message for 10 seconds
-            if transactions:
-                if "no" in transactions.body:
-                    pass
-                else:
-                    with warnings.catch_warnings():
-                        warnings.filterwarnings("ignore", category=FutureWarning)
-                        df_transactions = pd.read_json(transactions.body, orient="split")
-                    buys = df_transactions['buyer'].str.contains(str(self.agent.jid[0]))
-                    sells = df_transactions['seller'].str.contains(str(self.agent.jid[0]))
-                    for price in df_transactions["price"][buys]:
-                        self.agent.money -= price
-                        self.agent.stock_count += 1
-                    for price in df_transactions["price"][sells]:
-                        self.agent.money += price
-                        self.agent.stock_count -= 1
+        async def ownership_update(self):
+            for stock in self.stock_list:
+                daily_transactions_stock = self.agent.environment.transaction_list_one_day[stock]
+                buys = daily_transactions_stock['buyer'].str.contains(str(self.agent.jid[0]))
+                sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
+                for price in daily_transactions_stock["price"][buys]:
+                    self.agent.money -= price
+                    self.agent.stock_count[stock] += 1
+                for price in daily_transactions_stock["price"][sells]:
+                    self.agent.money += price
+                    self.agent.stock_count[stock] -= 1
+
+
     async def setup(self):
         print(f"{self.jid} started . . .")
         b = self.InvestBehav()
