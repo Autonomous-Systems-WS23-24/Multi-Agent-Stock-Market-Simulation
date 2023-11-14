@@ -16,7 +16,7 @@ async def main():
     stock_list = ["zoes.us.txt"]
     environment = Environment.Environment(stock_list)
     Agent_Broker = Broker.Broker("broker@localhost", "1234",environment,num_investors,stock_list,num_iterations=num_iterations)
-    investors = [Investor.Investor(f"investor{i}@localhost", "1234",environment,(i%4),(i%4)*10,(i%5)*100,risk_factors[i],stock_list,num_iterations=num_iterations) for i in range(1, num_investors + 1)]
+    investors = [Investor.Investor(f"investor{i}@localhost", "1234",environment,1,(i%4)*10,(i%5)*100,risk_factors[i],stock_list,num_iterations=num_iterations) for i in range(1, num_investors + 1)]
     tasks = []
     await Agent_Broker.start()
     for investor in investors:
