@@ -1,6 +1,10 @@
 import talib as tl
 
-def strategy1(stockdata,risk_factor,money,stock_count,opininons,social_influence):
+def strategy1(stockdata,list_stocks,risk_factor,money,stock_count,opinions,social_influence):
+    for stock in list_stocks:
+
+
+    
     n=1
     # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
     # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
