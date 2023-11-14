@@ -40,21 +40,17 @@ class Broker(Agent):
         async def receive_offers(self):
             for i in range(len(self.investor_list)):
                 offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
-                received_data = json.loads(offers.body)  # Assuming received_message is the message you received
-                order_data = {stock: pd.read_json(order, orient='split') for stock, order in received_data.items()}
 
                 if offers:
                     print(f"Offers from Agent {offers.sender} received!")
                     received_data = json.loads(offers.body)  # Assuming received_message is the message you received
-                    #order_data = {stock: pd.read_json(order, orient='split') for stock, order in received_data.items()}
+                    order_data = {stock: order for stock, order in received_data.items()}
                     print(received_data)
 
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore", category=FutureWarning)
 
-                        for stock_data in received_data:
-                            stock = list(stock_data.keys())[0]
-                            order = stock_data[stock]
+                        for stock, order in order_data.items():
                             df_offer = pd.read_json(order, orient='split')
 
                             if np.isnan(df_offer['sell']):
@@ -62,7 +58,6 @@ class Broker(Agent):
                                 quantity = df_offer.loc[0, 'quantity']
                                 investor_name = offers.sender
                                 self.agent.environment.put_buy_offer(stock, price, quantity, investor_name)
-
 
                             elif np.isnan(df_offer['buy']):
                                 price = df_offer.loc[0, 'sell']
