@@ -18,7 +18,7 @@ class Broker(Agent):
         super().__init__(jid, password)
         self.num_investors = num_investors
         self.num_iterations = num_iterations
-        class BrokerBehaviour(CyclicBehaviour):
+    class BrokerBehaviour(CyclicBehaviour):
             async def on_start(self):
                 print(f"Starting Broker. . .")
                 self.count = 0

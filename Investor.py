@@ -17,12 +17,14 @@ import Strategies
 
 class Investor(Agent):
 
-    def __init__(self,jid,password,environment,strategy,stock,money,risk_factor,num_iterations=1000):
+    def __init__(self,jid,password,environment,strategy,stock,money,risk_factor,stock_list,num_iterations=1000):
         super().__init__(jid, password)
         self.environment = environment
+        self.stock_list = stock_list
         self.strategy = strategy
         self.diversification_factor = 1
-        self.social_influence_dict = {}
+        self.social_influence_dict = pd.DataFrame(columns=self.stock_list)
+        self.opinions = pd.DataFrame(columns= self.stock_list)
         self.risk_factor = risk_factor
         self.networth_list = []
         self.asset_networth_list = []
@@ -34,7 +36,6 @@ class Investor(Agent):
         async def on_start(self):
             print(f"Starting {self.agent.jid} behaviour . . .")
             self.count = 0
-            self.stock_list = ["1"]
         async def run(self):
             # look at stockdata and receive orders
             await self.send_orders()
@@ -69,14 +70,15 @@ class Investor(Agent):
             # instantiate strategy using strategy_num by setting it manually
             strategy = f'strategy{self.agent.strategy}'
             strategy_func = getattr(Strategies, strategy, None)
-            order = strategy_func(stockdata,self.agent.risk_factor,self.agent.money,self.agent.stock_count,self.agent.diversification_factor,self.agent.social_influence_dict)
+            orders = strategy_func(stockdata,self.agent.risk_factor,self.agent.money,self.agent.stock_count,self.agent.opinions_dict,self.agent.social_influence_dict)
+            json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
             msg = Message(to="Broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-            msg.body = order.to_json(orient="split")  # Set the message content
+            msg.body = pd.Series(json_data).to_json(orient="split")  # Set the message content
             await self.send(msg)
 
         async def ownership_update(self):
-            for stock in self.stock_list:
+            for stock in self.agent.stock_list:
                 daily_transactions_stock = self.agent.environment.transaction_list_one_day[stock]
                 buys = daily_transactions_stock['buyer'].str.contains(str(self.agent.jid[0]))
                 sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
@@ -86,6 +88,12 @@ class Investor(Agent):
                 for price in daily_transactions_stock["price"][sells]:
                     self.agent.money += price
                     self.agent.stock_count[stock] -= 1
+        async def socialize(self):
+            for investor in self.agent.investor_list:
+                msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
+                msg.set_metadata("performative", "inform")  # Set the "query" FIPA performative
+                msg.body = self.agent.opinions.to_json(orient="split")  # Set the message content
+                await self.send(msg)
 
 
     async def setup(self):
