@@ -75,6 +75,7 @@ class Broker(Agent):
             for stock in self.agent.environment.list_stocks:
                 df_buy = self.agent.environment.orderbook_buy_offers[stock]
                 df_sell = self.agent.environment.orderbook_sell_offers[stock]
+                print(df_buy)
                 df_buy_sorted = df_buy.sort_values(by="buy", ascending=False).reset_index(drop=True)
                 df_sell_sorted = df_sell.sort_values(by="sell").reset_index(drop=True)
 
@@ -97,8 +98,6 @@ class Broker(Agent):
                     # Convert the list of dictionaries into a DataFrame
                     else:
                         continue
-
-
 
         async def on_end(self):
             pass
