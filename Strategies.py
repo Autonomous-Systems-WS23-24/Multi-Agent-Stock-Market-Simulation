@@ -28,6 +28,8 @@ def strategy1(stockdata_dict,list_stocks,risk_factor,money,stock_count,opinions,
                 n=5
             #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
         offer[stock] = [buy_price,sell_price,n]
+   # new_offer = modifyoffer(opininos,social_influence)    we here put a linear transform on the offers dependent on personal beliefs and social influences
+
     return offer
 
 
