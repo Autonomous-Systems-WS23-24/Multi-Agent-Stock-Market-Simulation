@@ -23,12 +23,27 @@ class Environment():
         self.transaction_list_one_day = {}
         for stock in self.list_stocks:
             self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[:52]
-            self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
-            self.orderbook_buy_offers[stock] = pd.DataFrame(columns=["name", "buy"])
+            self.orderbook_sell_offers[stock] =  pd.DataFrame(columns=["name", "sell"])
+            self.orderbook_buy_offers[stock] =  pd.DataFrame(columns=["name", "buy"])
             self.transaction_list_one_day[stock] = []
 
-    def append_daily_transaction(self,stock_name,price):
-        self.transaction_list_one_day[stock_name].append(price)
+
+    def put_buy_offer(self,stock,price,quantity,investor_name):
+        for i in range(quantity):
+            offer = pd.DataFrame({"name": investor_name, "buy":price}, index=[0])
+            self.orderbook_buy_offers[stock] = pd.concat([self.orderbook_buy_offers[stock],offer],ignore_index=True)
+
+    def put_sell_offer(self,stock,price,quantity,investor_name):
+        for i in range(quantity):
+            offer = pd.DataFrame({"name": investor_name, "sell": price}, index=[0])
+            self.orderbook_sell_offers[stock] = pd.concat([self.orderbook_sell_offers[stock], offer],ignore_index=True)
+
+    def do_transaction(self,stock,price,buyer_name,seller_name):
+        self.transaction_list_one_day[stock].append(price)
+        indice_to_remove_sell = self.orderbook_sell_offers[stock][self.orderbook_sell_offers[stock]['name'].str.contains(seller_name)].head(1).index
+        indice_to_remove_buy = self.orderbook_buy_offers[stock][self.orderbook_buy_offers[stock]['name'].str.contains(buyer_name)].head(1).index
+        self.orderbook_buy_offers[stock].drop(indice_to_remove_buy)
+        self.orderbook_sell_offers[stock].drop(indice_to_remove_sell)
 
     def create_candles(self):
         for stock in self.list_stocks:
