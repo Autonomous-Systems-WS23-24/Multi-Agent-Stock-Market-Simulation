@@ -1,6 +1,7 @@
 import talib as tl
 
 def strategy1(stockdata,risk_factor,money,stock_count):
+    n=1
     # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
     # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
     stockdata["RSI"] = tl.RSI(stockdata['Close'], timeperiod=14)
@@ -9,46 +10,52 @@ def strategy1(stockdata,risk_factor,money,stock_count):
     price_mean = (price_low + price_high) / 2
     # moving average of last 52 days
     stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=26, matype=0)
+    sell_price = 9999999999
+    buy_price = 0
     # buying when RSI value is lower than 35, and the mean price is 5 euro lower than the MA52. Buy the stock for the mean price
     if stockdata.at[stockdata.index[-1],"RSI"] < 35 and price_mean <= (stockdata.at[stockdata.index[-1],"MA"] - 5/risk_factor) and money >= price_mean - 5 :
         buy_price = price_mean - 5
-    else:
-        buy_price = 0
+        if money > 5 * buy_price:
+            n = 5
     # selling when RSI value is higher than 40 or if the low price is 5 lower than MA52. Sell the stock for the mean price
-    if stockdata.at[stockdata.index[-1],"RSI"] > 40 or price_low <= (stockdata.at[stockdata.index[-1],"MA"] - 5/risk_factor) and stock_count>0:
+    elif stockdata.at[stockdata.index[-1],"RSI"] > 40 or price_low <= (stockdata.at[stockdata.index[-1],"MA"] - 5/risk_factor) and stock_count>0:
         sell_price = price_mean
-    else:
-        sell_price = 9999999999
+        if stock_count>=5:
+            n=5
     #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
-    return buy_price, sell_price
+    return buy_price, sell_price, n
 
 
 
 def strategy2(stockdata,risk_factor,money,stock_count):
+    n=1
     price_low = stockdata.at[stockdata.index[-1], 'Low']
     price_high = stockdata.at[stockdata.index[-1], 'High']
     price_mean = (price_low + price_high) / 2
     # moving average of last 52 days
     sma_period = 25
     stockdata["SMA"] = tl.MA(stockdata['Close'], timeperiod=sma_period, matype=0)
+    buy_price = 0
+    sell_price= 999999
     # Calculate a simple moving average (SMA) over the last N periods.
     #Buying if the mean is higher than the sma
     if price_mean*risk_factor < stockdata.at[stockdata.index[-1],"SMA"] and money >= price_mean:
-        buy_price = price_mean 
-    else:
-        buy_price = 0
+        buy_price = price_mean
+        if money > 5 * buy_price:
+            n = 5
     #Selling if the mean is lower than the sma
-    if price_mean*risk_factor > stockdata.at[stockdata.index[-1],"SMA"] and stock_count>0:
+    elif price_mean*risk_factor > stockdata.at[stockdata.index[-1],"SMA"] and stock_count>0:
         sell_price = price_mean
-    else:
-        sell_price = 9999999999
+        if stock_count >= 5:
+            n = 5
     #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
-    return buy_price, sell_price
+    return buy_price, sell_price, n
 
 
 
 
 def strategy3(stockdata,risk_factor,money,stock_count):
+    n=1
     # Define the period for Bollinger Bands calculation and the number of standard deviations
     bb_period = 20
     num_std_dev = 2
@@ -67,17 +74,22 @@ def strategy3(stockdata,risk_factor,money,stock_count):
 
     if stockdata.at[stockdata.index[-1], 'Close'] < stockdata.at[stockdata.index[-1], 'LowerBand']*risk_factor and money >= stockdata.at[stockdata.index[-1], 'Close']:
         buy_price = stockdata.at[stockdata.index[-1], 'Close']
+        if money > 5 * buy_price:
+            n = 5
     elif stockdata.at[stockdata.index[-1], 'Close'] > stockdata.at[stockdata.index[-1], 'UpperBand']*risk_factor and stock_count>0:
         sell_price = stockdata.at[stockdata.index[-1], 'Close']*1.1
+        if stock_count >= 5:
+            n = 5
 
     #print(f'Upper Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "UpperBand"]:.2f}')
     #print(f'Lower Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "LowerBand"]:.2f}')
     #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
 
-    return buy_price, sell_price
+    return buy_price, sell_price, n
 
 
 def strategy4(stockdata,risk_factor,money,stock_count):
+    n=1
     # Define the short-term and long-term periods for the EMA calculation
     short_term_period = 12
     long_term_period = 26
@@ -101,14 +113,19 @@ def strategy4(stockdata,risk_factor,money,stock_count):
 
     if macd_line.iloc[-1]*risk_factor > signal_line.iloc[-1] and macd_line.iloc[-2] <= signal_line.iloc[-2]*risk_factor and money >= stockdata.at[stockdata.index[-1], 'Close']:
         buy_price = stockdata.at[stockdata.index[-1], 'Close']
+        n=1
+        if money> 5*buy_price:
+            n = 5
     elif macd_line.iloc[-1]*risk_factor < signal_line.iloc[-1] and macd_line.iloc[-2] >= signal_line.iloc[-2]*risk_factor and stock_count>0:
         sell_price = stockdata.at[stockdata.index[-1], 'Close']
+        if stock_count >= 5:
+            n = 5
 
    # print(f'MACD Line: {macd_line.iloc[-1]:.2f}')
     #print(f'Signal Line: {signal_line.iloc[-1]:.2f}')
     #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
 
-    return buy_price, sell_price
+    return buy_price, sell_price, n
 
 
 

@@ -26,10 +26,9 @@ class Orderbook(Agent):
             for stock in self.list_stocks:
                 self.stock_data_history = pd.read_csv('archive/Stocks/{}'.format(stock))
                 self.stock_data = self.stock_data_history[10:60]
-                self.count = 1
+                self.count = 0
 
         async def run(self):
-            self.count += 1
             self.investor_list = [f"investor{i}" for i in range(1,self.agent.num_investors+1)]
             #  send data to traders
             await self.send_stockdata()
@@ -41,10 +40,12 @@ class Orderbook(Agent):
             self.do_transactions()
             # send transaction data
             await self.send_transactions()
-            #print(self.offerbook)
-            self.calc_new_stockdata()
+            self.count += 1
             if self.count == self.agent.num_iterations:
                 self.kill()
+            #print(self.offerbook)
+            self.calc_new_stockdata()
+
 
         async def on_end(self):
             x = np.arange(0, len(self.stock_data["Close"].to_list()))
