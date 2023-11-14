@@ -38,7 +38,6 @@ class Broker(Agent):
                 offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
                 if offers:
                     print(f"Offers from Agent {offers.sender} received!")
-                    print(offers.body)
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore", category=FutureWarning)
                         df_offer = pd.read_json(offers.body, orient="split")
