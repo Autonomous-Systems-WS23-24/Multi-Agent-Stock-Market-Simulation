@@ -37,31 +37,38 @@ class Broker(Agent):
         async def receive_offers(self):
             for i in range(len(self.investor_list)):
                 offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
+                received_data = json.loads(offers.body)  # Assuming received_message is the message you received
+                order_data = {stock: pd.read_json(order, orient='split') for stock, order in received_data.items()}
+
                 if offers:
                     print(f"Offers from Agent {offers.sender} received!")
+
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore", category=FutureWarning)
-                        df_offer = pd.read_json(offers.body, orient="split")
-                        # Code for adding buy offer to environment
-                        if np.isnan(df_offer['sell']):
-                            stock = ''
-                            price = df_offer.loc[0, 'buy']
-                            quantity = df_offer.loc[0, 'quantity']
-                            investor_name = offers.sender
-                            self.agent.environment.put_buy_offer(stock, price, quantity, investor_name)
+
+                        for stock, df_offer in order_data.items():
+                            # Code for adding buy offer to environment
+                            if np.isnan(df_offer['sell']):
+                                stock = ''
+                                price = df_offer.loc[0, 'buy']
+                                quantity = df_offer.loc[0, 'quantity']
+                                investor_name = offers.sender
+                                self.agent.environment.put_buy_offer(stock, price, quantity, investor_name)
 
 
-                        elif np.isnan(df_offer['buy']):
-                            stock = ''
-                            price = df_offer.loc[0, 'sell']
-                            quantity = df_offer.loc[0, 'quantity']
-                            investor_name = offers.sender
-                            self.agent.environment.put_sell_offer(stock, price, quantity, investor_name)
+                            elif np.isnan(df_offer['buy']):
+                                stock = ''
+                                price = df_offer.loc[0, 'sell']
+                                quantity = df_offer.loc[0, 'quantity']
+                                investor_name = offers.sender
+                                self.agent.environment.put_sell_offer(stock, price, quantity, investor_name)
 
-                        if df_offer['buy'] == np.nan and df_offer['sell'] == np.nan:
-                            continue
+                            if pd.isna(df_offer['buy']) and pd.isna(df_offer['sell']):
+                                continue
                 else:
                     print("Broker did not receive any stockdata after 10 seconds")
+                    continue
+
 
         async def match(self, stock):
             for stock in self.agent.environment.list_stocks:
