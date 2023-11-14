@@ -30,7 +30,7 @@ class Broker(Agent):
         async def run(self):
             self.investor_list = [f"investor{i}" for i in range(1, self.agent.num_investors + 1)]
             await self.receive_offers()
-            await self.match()
+            await self.match_transactions()
 
             # end condition
             self.count += 1
@@ -45,12 +45,18 @@ class Broker(Agent):
 
                 if offers:
                     print(f"Offers from Agent {offers.sender} received!")
+                    received_data = json.loads(offers.body)  # Assuming received_message is the message you received
+                    #order_data = {stock: pd.read_json(order, orient='split') for stock, order in received_data.items()}
+                    print(received_data)
 
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore", category=FutureWarning)
 
-                        for stock, df_offer in order_data.items():
-                            # Code for adding buy offer to environment
+                        for stock_data in received_data:
+                            stock = list(stock_data.keys())[0]
+                            order = stock_data[stock]
+                            df_offer = pd.read_json(order, orient='split')
+
                             if np.isnan(df_offer['sell']):
                                 price = df_offer.loc[0, 'buy']
                                 quantity = df_offer.loc[0, 'quantity']
@@ -71,7 +77,7 @@ class Broker(Agent):
                     continue
 
 
-        async def match(self, msg):
+        async def match_transactions(self):
             for stock in self.agent.environment.list_stocks:
                 df_buy = self.agent.environment.orderbook_buy_offers[stock]
                 df_sell = self.agent.environment.orderbook_sell_offers[stock]
