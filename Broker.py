@@ -14,8 +14,9 @@ import Strategies
 
 
 class Broker(Agent):
-    def __init__(self, jid, password,environment, num_investors, num_iterations):
+    def __init__(self, jid, password,environment, num_investors,stock_list, num_iterations):
         super().__init__(jid, password)
+        self.stock_list = stock_list
         self.num_investors = num_investors
         self.num_iterations = num_iterations
         self.environment = environment
@@ -98,5 +99,5 @@ class Broker(Agent):
         # Add the behavior to the agent
         template = Template()
         template.set_metadata("performative", "inform")
-        b = BrokerBehaviour()
+        b = self.BrokerBehaviour()
         self.add_behaviour(b, template)

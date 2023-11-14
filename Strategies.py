@@ -1,6 +1,6 @@
 import talib as tl
 
-def strategy1(stockdata,risk_factor,money,stock_count):
+def strategy1(stockdata,risk_factor,money,stock_count,opininons,social_influence):
     n=1
     # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
     # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
@@ -10,8 +10,8 @@ def strategy1(stockdata,risk_factor,money,stock_count):
     price_mean = (price_low + price_high) / 2
     # moving average of last 52 days
     stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=26, matype=0)
-    sell_price = 9999999999
-    buy_price = 0
+    sell_price = np.nan
+    buy_price = np.nan
     # buying when RSI value is lower than 35, and the mean price is 5 euro lower than the MA52. Buy the stock for the mean price
     if stockdata.at[stockdata.index[-1],"RSI"] < 35 and price_mean <= (stockdata.at[stockdata.index[-1],"MA"] - 5/risk_factor) and money >= price_mean - 5 :
         buy_price = price_mean - 5
@@ -27,7 +27,7 @@ def strategy1(stockdata,risk_factor,money,stock_count):
 
 
 
-def strategy2(stockdata,risk_factor,money,stock_count):
+def strategy2(stockdata,risk_factor,money,stock_count,opininons,social_influence):
     n=1
     price_low = stockdata.at[stockdata.index[-1], 'Low']
     price_high = stockdata.at[stockdata.index[-1], 'High']
@@ -54,7 +54,7 @@ def strategy2(stockdata,risk_factor,money,stock_count):
 
 
 
-def strategy3(stockdata,risk_factor,money,stock_count):
+def strategy3(stockdata,risk_factor,money,stock_count,opininons,social_influence):
     n=1
     # Define the period for Bollinger Bands calculation and the number of standard deviations
     bb_period = 20
@@ -69,8 +69,8 @@ def strategy3(stockdata,risk_factor,money,stock_count):
     stockdata['LowerBand'] = stockdata['RollingMean'] - (num_std_dev * stockdata['RollingStd'])
 
     # Determine the buy and sell signals based on Bollinger Bands
-    buy_price = 0
-    sell_price = 9999999999
+    buy_price = np.nan
+    sell_price = np.nan
 
     if stockdata.at[stockdata.index[-1], 'Close'] < stockdata.at[stockdata.index[-1], 'LowerBand']*risk_factor and money >= stockdata.at[stockdata.index[-1], 'Close']:
         buy_price = stockdata.at[stockdata.index[-1], 'Close']
@@ -88,7 +88,7 @@ def strategy3(stockdata,risk_factor,money,stock_count):
     return buy_price, sell_price, n
 
 
-def strategy4(stockdata,risk_factor,money,stock_count):
+def strategy4(stockdata,risk_factor,money,stock_count,opininons,social_influence):
     n=1
     # Define the short-term and long-term periods for the EMA calculation
     short_term_period = 12
