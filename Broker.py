@@ -71,7 +71,7 @@ class Broker(Agent):
                     continue
 
 
-        async def match(self):
+        async def match(self, msg):
             for stock in self.agent.environment.list_stocks:
                 df_buy = self.agent.environment.orderbook_buy_offers[stock]
                 df_sell = self.agent.environment.orderbook_sell_offers[stock]
