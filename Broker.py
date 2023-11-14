@@ -45,7 +45,7 @@ class Broker(Agent):
 
                 if offers:
                     print(f"Offers from Agent {offers.sender} received!")
-                    received_data = json.loads(offers.body)  # Assuming received_message is the message you received
+                    received_data = json.loads(offers.body)
                     #order_data = {stock: pd.read_json(order, orient='split') for stock, order in received_data.items()}
                     print(received_data)
 
