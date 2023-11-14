@@ -11,6 +11,7 @@ from spade.template import Template
 import Orderbook
 import Orderbook_historical_data
 import Investor
+import Environment
 
 
 async def main():
@@ -18,7 +19,8 @@ async def main():
     num_iterations = 100
     risk_factors = np.arange(1,3.1,0.1)
     money_list = []
-    stock_list = []
+    stock_list = ["zoes.us.txt"]
+    environment = Environment.Environment(stock_list)
     Agent_Orderbook = Orderbook.Orderbook("Orderbook@localhost", "1234",num_investors,num_iterations=num_iterations)
     investors = [Investor.Investor(f"investor{i}@localhost", "1234",(i%4)+1,(i%4)*10,(i%5)*100,risk_factors[i],num_iterations=num_iterations) for i in range(1, num_investors + 1)]
     tasks = []
