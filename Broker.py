@@ -42,32 +42,32 @@ class Broker(Agent):
                 offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
 
                 if offers:
-                    print(offers.body)
+                    #print(offers.body)
                     print(f"Offers from Agent {offers.sender} received!")
                     received_data = json.loads(offers.body)  # Assuming received_message is the message you received
                     order_data = {stock: order for stock, order in received_data.items()}
-                    print(received_data)
+                   # print(received_data)
 
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore", category=FutureWarning)
 
                         for stock, order in order_data.items():
                             df_offer = pd.read_json(order, orient='records')
-                            print(df_offer)
+                            #print(df_offer)
 
-                            if np.isnan(df_offer['sell']):
+                            if np.isnan(df_offer.loc[0,'sell']):
                                 price = df_offer.loc[0, 'buy']
                                 quantity = df_offer.loc[0, 'quantity']
-                                investor_name = offers.sender
+                                investor_name = offers.sender[0]
                                 self.agent.environment.put_buy_offer(stock, price, quantity, investor_name)
 
-                            elif np.isnan(df_offer['buy']):
+                            elif np.isnan(df_offer.loc[0,'buy']):
                                 price = df_offer.loc[0, 'sell']
                                 quantity = df_offer.loc[0, 'quantity']
-                                investor_name = offers.sender
+                                investor_name = offers.sender[0]
                                 self.agent.environment.put_sell_offer(stock, price, quantity, investor_name)
 
-                            if pd.isna(df_offer['buy']) and pd.isna(df_offer['sell']):
+                            if pd.isna(df_offer.loc[0,'buy']) and pd.isna(df_offer.loc[0,'sell']):
                                 continue
                 else:
                     print("Broker did not receive any stockdata after 10 seconds")

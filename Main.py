@@ -8,8 +8,8 @@ import Environment
 import Broker
 
 async def main():
-    num_investors = 1
-    num_iterations = 10
+    num_investors = 10
+    num_iterations = 100
     risk_factors = np.arange(1,3.1,0.1)
     money_list = []
     stock_ownership_list = []
