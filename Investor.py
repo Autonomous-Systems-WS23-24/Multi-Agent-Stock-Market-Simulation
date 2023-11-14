@@ -14,6 +14,7 @@ from spade.message import Message
 import warnings
 import Strategies_classes
 import Strategies
+import json
 
 class Investor(Agent):
 
@@ -74,7 +75,7 @@ class Investor(Agent):
             json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
             msg = Message(to="Broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-            msg.body = pd.DataFrame(json_data).to_json(orient="split")  # Set the message content
+            msg.body = json.dumps(json_data)  # Set the message content
             await self.send(msg)
 
         async def ownership_update(self):

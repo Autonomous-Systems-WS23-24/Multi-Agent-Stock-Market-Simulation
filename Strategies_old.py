@@ -1,3 +1,4 @@
+import pandas as pd
 import talib as tl
 import numpy as np
 
@@ -27,7 +28,7 @@ def strategy1(stockdata_dict,list_stocks,risk_factor,money,stock_count,opinions,
             if stock_count>=5:
                 n=5
             #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
-        offer[stock] = [buy_price,sell_price,n]
+        offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n })
     return offer
 
 
