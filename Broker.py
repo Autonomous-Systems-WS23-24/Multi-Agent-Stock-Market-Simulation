@@ -40,6 +40,20 @@ class Broker(Agent):
                 # Send the message
                 await self.send(msg)
 
+            async def receive_offers(self):
+                for i in range(len(self.investor_list)):
+                    offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
+                    if offers:
+                        print(f"Offers from Agent {offers.sender} received!")
+                        print(offers.body)
+                        with warnings.catch_warnings():
+                            warnings.filterwarnings("ignore", category=FutureWarning)
+                            self.dataframe_offers = pd.read_json(offers.body, orient="split")
+                            self.offerbook = pd.concat([self.offerbook, self.dataframe_offers], axis=0, ignore_index=True)
+
+                    else:
+                        print("Broker did not receive any stockdata after 10 seconds")
+
             async def on_end(self):
                 pass
 

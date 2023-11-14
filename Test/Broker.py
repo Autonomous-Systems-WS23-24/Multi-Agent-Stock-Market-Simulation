@@ -49,8 +49,7 @@ class Broker(Agent):
                         with warnings.catch_warnings():
                             warnings.filterwarnings("ignore", category=FutureWarning)
                             self.dataframe_offers = pd.read_json(offers.body, orient="split")
-                            self.offerbook = pd.concat([self.offerbook, self.dataframe_offers], axis=0,
-                                                       ignore_index=True)
+                            self.offerbook = pd.concat([self.offerbook, self.dataframe_offers], axis=0, ignore_index=True)
 
                     else:
                         print("Broker did not receive any stockdata after 10 seconds")
