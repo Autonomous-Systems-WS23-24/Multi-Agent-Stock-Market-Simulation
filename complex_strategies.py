@@ -21,9 +21,6 @@ def strategy1(stockdata, risk_factor, money, stock_count):
     # moving average of the last 26 days
     stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=26, matype=0)
     
-    # Calculate position size based on risk factor and available capital
-    position_size = max(1,int((risk_factor * money) / price_mean))
-
     confidence = -risk_factor if risk_factor < 0.03 else risk_factor
 
     # Buying when RSI value is lower than dynamic buy threshold
@@ -32,7 +29,8 @@ def strategy1(stockdata, risk_factor, money, stock_count):
         and price_mean <= (stockdata.at[stockdata.index[-1], "MA"] - 5 / (risk_factor)) 
         and money >= price_mean - 5
     ):
-        buy_price = price_mean + confidence*5   # if the risk is higher, investor risks buying for more price
+        buy_price = price_mean + confidence*5  # if the risk is higher, investor risks buying for more price
+        position_size = max(1,int((risk_factor * money) / price_mean)) 
         if money > 5 * buy_price:
             n = min(position_size,5)
 
@@ -41,6 +39,7 @@ def strategy1(stockdata, risk_factor, money, stock_count):
     elif (stockdata.at[stockdata.index[-1], "RSI"] > sell_threshold 
         or price_low <= (stockdata.at[stockdata.index[-1], "MA"] - 5 / risk_factor) and stock_count > 0):
         sell_price = price_mean - confidence*5 # if the risk is higher, investor risks selling for less price
+        position_size=int(stock_count,)
         if stock_count >= 5:
             n = min(position_size, stock_count)
 
@@ -148,7 +147,6 @@ def strategy4(stockdata, risk_factor, money, stock_count):
     # Calculate the signal line as a 9-period EMA of the MACD line
     signal_line = macd_line.ewm(span=signal_line_period, adjust=False).mean()
 
-    # Determine the buy and sell signals based on MACD, Volume, and Market Index Acceleration
     buy_price = 0
     sell_price = 9999999999
 
