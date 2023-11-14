@@ -1,7 +1,7 @@
 import talib as tl
 
 #added RSI thresholds 
-def strategy1(stockdata, risk_factor, money, stock_count): 
+def strategy1(stockdata,stock_list, risk_factor, money, stock_count):
     n = 1
     
     # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.

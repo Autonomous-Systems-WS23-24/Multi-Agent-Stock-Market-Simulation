@@ -74,7 +74,7 @@ class Investor(Agent):
             json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
             msg = Message(to="Broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-            msg.body = pd.Series(json_data).to_json(orient="split")  # Set the message content
+            msg.body = pd.DataFrame(json_data).to_json(orient="split")  # Set the message content
             await self.send(msg)
 
         async def ownership_update(self):
@@ -94,6 +94,8 @@ class Investor(Agent):
                 msg.set_metadata("performative", "inform")  # Set the "query" FIPA performative
                 msg.body = self.agent.opinions.to_json(orient="split")  # Set the message content
                 await self.send(msg)
+            for investor in self.agent.investor_list:
+                pass
 
 
     async def setup(self):
