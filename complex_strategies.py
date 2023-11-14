@@ -18,33 +18,29 @@ def strategy1(stockdata, risk_factor, money, stock_count):
     price_high = stockdata.at[stockdata.index[-1], 'High']
     price_mean = (price_low + price_high) / 2
     
-    # moving average of the last 52 days
+    # moving average of the last 26 days
     stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=26, matype=0)
     
     # Calculate position size based on risk factor and available capital
-    position_size = int((risk_factor * money) / price_mean)
+    position_size = max(1,int((risk_factor * money) / price_mean))
 
     confidence = -risk_factor if risk_factor < 0.03 else risk_factor
 
     # Buying when RSI value is lower than dynamic buy threshold
     # and the mean price is 5 euro lower than the MA52. Buy the stock for the mean price
-    if (
-        stockdata.at[stockdata.index[-1], "RSI"] < buy_threshold 
+    if (stockdata.at[stockdata.index[-1], "RSI"] < buy_threshold 
         and price_mean <= (stockdata.at[stockdata.index[-1], "MA"] - 5 / (risk_factor)) 
         and money >= price_mean - 5
     ):
-        buy_price = price_mean + confidence*10   # if the risk is higher, investor risks buying for more price
+        buy_price = price_mean + confidence*5   # if the risk is higher, investor risks buying for more price
         if money > 5 * buy_price:
             n = min(position_size,5)
 
     # Selling when RSI value is higher than dynamic sell threshold
     # or if the low price is 5 lower than MA52. Sell the stock for the mean price
-    elif (
-        stockdata.at[stockdata.index[-1], "RSI"] > sell_threshold 
-        or price_low <= (stockdata.at[stockdata.index[-1], "MA"] - 5 / risk_factor) 
-        and stock_count > 0
-    ):
-        sell_price = price_mean - confidence*10 # if the risk is higher, investor risks selling for less price
+    elif (stockdata.at[stockdata.index[-1], "RSI"] > sell_threshold 
+        or price_low <= (stockdata.at[stockdata.index[-1], "MA"] - 5 / risk_factor) and stock_count > 0):
+        sell_price = price_mean - confidence*5 # if the risk is higher, investor risks selling for less price
         if stock_count >= 5:
             n = min(position_size, stock_count)
 
@@ -71,30 +67,25 @@ def strategy2(stockdata,risk_factor,money,stock_count):
     sell_price= 999999
 
     # Calculate position size based on risk factor and available capital
-    position_size = int((risk_factor * money) / price_mean)
+    position_size = max(1,int((risk_factor * money) / price_mean))
 
     confidence = -risk_factor if risk_factor < 0.03 else risk_factor
 
     # Calculate a simple moving average (SMA) over the last N periods.
     #Buying if the mean is higher than the sma
     if (
-        price_mean < stockdata.at[stockdata.index[-1], "SMA"]
-        and money >= price_mean
-        and stockdata['%K'].iloc[-1] < 20  # Adjust the threshold as needed
-    ):
-        buy_price = price_mean+ risk_factor*10 
+        price_mean < stockdata.at[stockdata.index[-1], "SMA"] and money >= price_mean
+        and stockdata['%K'].iloc[-1] < 20 ):
+        buy_price = price_mean+ confidence*5 
         if money > 5 * buy_price:
             n = min(position_size,5)
+
     #Selling if the mean is lower than the sma
-    elif (
-        price_mean > stockdata.at[stockdata.index[-1], "SMA"]
-        and stock_count > 0
-        and stockdata['%K'].iloc[-1] > 80  # Adjust the threshold as needed
-    ):
-        sell_price = price_mean
+    elif (price_mean > stockdata.at[stockdata.index[-1], "SMA"] and stock_count > 0
+        and stockdata['%K'].iloc[-1] > 80):
+        sell_price = price_mean - confidence*5
         if stock_count >= 5:
             n = min(position_size, stock_count)
-    #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
     return buy_price, sell_price, n
 
 
@@ -120,20 +111,17 @@ def strategy3(stockdata,risk_factor,money,stock_count):
     sell_price = 9999999999
 
     # Calculate position size based on risk factor and available capital
-    position_size = int((risk_factor * money) / price_mean)
+    position_size = max(1,int((risk_factor * money) / price_mean))
+    confidence = -risk_factor if risk_factor < 0.03 else risk_factor
 
-    if stockdata.at[stockdata.index[-1], 'Close'] < stockdata.at[stockdata.index[-1], 'LowerBand'] and money >= stockdata.at[stockdata.index[-1], 'Close']:
-        buy_price = price_mean + risk_factor*10 
+    if (stockdata.at[stockdata.index[-1], 'Close'] < stockdata.at[stockdata.index[-1], 'LowerBand'] and money >= stockdata.at[stockdata.index[-1], 'Close']):
+        buy_price = price_mean + confidence*5 
         if money > 5 * buy_price:
             n = min(position_size,5)
-    elif stockdata.at[stockdata.index[-1], 'Close'] > stockdata.at[stockdata.index[-1], 'UpperBand'] and stock_count>0:
-        sell_price = price_mean + risk_factor*10 
+    elif (stockdata.at[stockdata.index[-1], 'Close'] > stockdata.at[stockdata.index[-1], 'UpperBand'] and stock_count>0):
+        sell_price = price_mean - confidence*5 
         if stock_count >= 5:
             n = min(position_size, stock_count)
-
-    #print(f'Upper Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "UpperBand"]:.2f}')
-    #print(f'Lower Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "LowerBand"]:.2f}')
-    #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
 
     return buy_price, sell_price, n
 
@@ -165,24 +153,17 @@ def strategy4(stockdata, risk_factor, money, stock_count):
     sell_price = 9999999999
 
     # Calculate position size based on risk factor and available capital
-    position_size = int((risk_factor * money) / price_mean)
+    position_size = max(1,int((risk_factor * money) / price_mean))  
+    confidence = -risk_factor if risk_factor < 0.03 else risk_factor
 
-    if (
-        macd_line.iloc[-1]  > signal_line.iloc[-1]
-        and money >= stockdata.at[stockdata.index[-1], 'Close']
-         
-    ):
-        buy_price = price_mean + risk_factor*5 
+    if (macd_line.iloc[-1]  > signal_line.iloc[-1] and money >= stockdata.at[stockdata.index[-1], 'Close']):
+        buy_price = price_mean + confidence*5
         if money > 5 * buy_price:
             n = min(position_size,5)
 
-    elif (
-        macd_line.iloc[-1] < signal_line.iloc[-1]
-        and stock_count > 0
-        
-    ):
-        sell_price = stockdata.at[stockdata.index[-1], 'Close']
-        if stock_count >= 5:
+    elif (macd_line.iloc[-1] < signal_line.iloc[-1] and stock_count > 0):
+        sell_price = price_mean + confidence*5
+        if stock_count >= 5:  
             n = min(position_size, stock_count)
 
     return buy_price, sell_price, n
