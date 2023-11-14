@@ -43,14 +43,15 @@ class Broker(Agent):
                         warnings.filterwarnings("ignore", category=FutureWarning)
                         df_offer = pd.read_json(offers.body, orient="split")
                         # Code for adding buy offer to environment
-                        if df_offer['sell'] == np.nan:
+                        if np.isnan(df_offer['sell']):
                             stock = ''
                             price = df_offer.loc[0, 'buy']
                             quantity = df_offer.loc[0, 'quantity']
                             investor_name = offers.sender
                             self.agent.environment.put_buy_offer(stock, price, quantity, investor_name)
 
-                        if df_offer['buy'] == np.nan:
+
+                        elif np.isnan(df_offer['buy']):
                             stock = ''
                             price = df_offer.loc[0, 'sell']
                             quantity = df_offer.loc[0, 'quantity']
@@ -61,6 +62,33 @@ class Broker(Agent):
                             pass
                 else:
                     print("Broker did not receive any stockdata after 10 seconds")
+
+        async def match(self, stock):
+            for stock in self.agent.environment.list_stocks:
+                df_buy = self.agent.environment.orderbook_buy_offers[stock]
+                df_sell = self.agent.environment.orderbook_sell_offers[stock]
+                df_buy_sorted = df_buy.sort_values(by="buy", ascending=False).reset_index(drop=True)
+                df_sell_sorted = df_sell.sort_values(by="sell").reset_index(drop=True)
+                matched_buyers = set()
+                matched_sellers = set()
+                for index in range(len(df_buy_sorted.index)):
+                    buyer_name = df_buy_sorted["name"][index]
+                    seller_name = df_sell_sorted["name"][index]
+
+                    if buyer_name == seller_name:
+                        continue  # Skip matching the buyer and seller with the same name
+
+                    if buyer_name not in matched_buyers and seller_name not in matched_sellers and df_buy_sorted["buy"][index] >= df_sell_sorted["sell"][index]:
+                        price = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index]) / 2, 2)
+                        transaction = {"buyer": buyer_name, "seller": seller_name, "price": price}
+                        self.agent.environment.do_transaction(stock, price, buyer_name, seller_name)
+                        matched_buyers.add(buyer_name)
+                        matched_sellers.add(seller_name)
+                    # Convert the list of dictionaries into a DataFrame
+                    else:
+                        continue
+
+
 
         async def on_end(self):
             pass
