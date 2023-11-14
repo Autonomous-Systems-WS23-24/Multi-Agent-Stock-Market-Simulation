@@ -42,6 +42,7 @@ class Broker(Agent):
                 offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
 
                 if offers:
+                    print(offers.body)
                     print(f"Offers from Agent {offers.sender} received!")
                     received_data = json.loads(offers.body)  # Assuming received_message is the message you received
                     order_data = {stock: order for stock, order in received_data.items()}
