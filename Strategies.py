@@ -79,7 +79,7 @@ def strategy3(stockdata,risk_factor,money,stock_count):
     elif stockdata.at[stockdata.index[-1], 'Close'] > stockdata.at[stockdata.index[-1], 'UpperBand']*risk_factor and stock_count>0:
         sell_price = stockdata.at[stockdata.index[-1], 'Close']*1.1
         if stock_count >= 5:
-            n = 5
+            n = 5 # modificate it, take into account the level of confidence
 
     #print(f'Upper Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "UpperBand"]:.2f}')
     #print(f'Lower Bollinger Band: {dataframe_stockdata.at[dataframe_stockdata.index[-1], "LowerBand"]:.2f}')
