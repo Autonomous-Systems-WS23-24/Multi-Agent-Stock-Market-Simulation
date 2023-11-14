@@ -58,7 +58,7 @@ class Broker(Agent):
                             self.agent.environment.put_sell_offer(stock, price, quantity, investor_name)
 
                         if df_offer['buy'] == np.nan and df_offer['sell'] == np.nan:
-                            pass
+                            continue
                 else:
                     print("Broker did not receive any stockdata after 10 seconds")
 
@@ -68,8 +68,10 @@ class Broker(Agent):
                 df_sell = self.agent.environment.orderbook_sell_offers[stock]
                 df_buy_sorted = df_buy.sort_values(by="buy", ascending=False).reset_index(drop=True)
                 df_sell_sorted = df_sell.sort_values(by="sell").reset_index(drop=True)
+
                 matched_buyers = set()
                 matched_sellers = set()
+
                 for index in range(len(df_buy_sorted.index)):
                     buyer_name = df_buy_sorted["name"][index]
                     seller_name = df_sell_sorted["name"][index]
@@ -79,7 +81,7 @@ class Broker(Agent):
 
                     if buyer_name not in matched_buyers and seller_name not in matched_sellers and df_buy_sorted["buy"][index] >= df_sell_sorted["sell"][index]:
                         price = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index]) / 2, 2)
-                        transaction = {"buyer": buyer_name, "seller": seller_name, "price": price}
+                        #transaction = {"buyer": buyer_name, "seller": seller_name, "price": price}
                         self.agent.environment.do_transaction(stock, price, buyer_name, seller_name)
                         matched_buyers.add(buyer_name)
                         matched_sellers.add(seller_name)

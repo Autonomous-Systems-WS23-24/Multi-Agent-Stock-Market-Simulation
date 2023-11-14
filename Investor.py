@@ -23,7 +23,7 @@ class Investor(Agent):
         self.stock_list = stock_list
         self.strategy = strategy
         self.diversification_factor = 1
-        self.social_influence_dict = pd.DataFrame(columns=self.stock_list)
+        self.social_influence = pd.DataFrame(columns=self.stock_list)
         self.opinions = pd.DataFrame(columns= self.stock_list)
         self.risk_factor = risk_factor
         self.networth_list = []
@@ -70,7 +70,7 @@ class Investor(Agent):
             # instantiate strategy using strategy_num by setting it manually
             strategy = f'strategy{self.agent.strategy}'
             strategy_func = getattr(Strategies, strategy, None)
-            orders = strategy_func(stockdata,self.agent.risk_factor,self.agent.money,self.agent.stock_count,self.agent.opinions_dict,self.agent.social_influence_dict)
+            orders = strategy_func(stockdata,self.agent.risk_factor,self.agent.money,self.agent.stock_count,self.agent.opinions,self.agent.social_influence)
             json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
             msg = Message(to="Broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
