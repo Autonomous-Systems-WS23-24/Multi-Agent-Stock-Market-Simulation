@@ -14,10 +14,11 @@ import Strategies
 
 
 class Broker(Agent):
-    def __init__(self, jid, password, num_investors, num_iterations):
+    def __init__(self, jid, password,environment, num_investors, num_iterations):
         super().__init__(jid, password)
         self.num_investors = num_investors
         self.num_iterations = num_iterations
+        self.environment = environment
 
     async def setup(self):
         # Define a behavior to interact with the environment and air traffic control

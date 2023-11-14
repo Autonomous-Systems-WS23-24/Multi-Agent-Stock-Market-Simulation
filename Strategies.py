@@ -152,4 +152,3 @@ def stock_cue_calc(stock_data):
                                                 fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3,
                                                 slowd_matype=0)
     return stock_data
-

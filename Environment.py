@@ -25,7 +25,7 @@ class Environment():
             self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[:52]
             self.orderbook_sell_offers[stock] =  pd.DataFrame(columns=["name", "sell"])
             self.orderbook_buy_offers[stock] =  pd.DataFrame(columns=["name", "buy"])
-            self.transaction_list_one_day[stock] = []
+            self.transaction_list_one_day[stock] = pd.DataFrame(columns=["buyer", "seller","price"])
 
 
     def put_buy_offer(self,stock,price,quantity,investor_name):
@@ -39,7 +39,8 @@ class Environment():
             self.orderbook_sell_offers[stock] = pd.concat([self.orderbook_sell_offers[stock], offer],ignore_index=True)
 
     def do_transaction(self,stock,price,buyer_name,seller_name):
-        self.transaction_list_one_day[stock].append(price)
+        transaction = pd.DataFrame({"buyer": buyer_name, "seller": seller_name, "price": price}, index=[0])
+        self.transaction_list_one_day[stock] = pd.concat([self.transaction_list_one_day[stock], transaction], ignore_index=True)
         indice_to_remove_sell = self.orderbook_sell_offers[stock][self.orderbook_sell_offers[stock]['name'].str.contains(seller_name)].head(1).index
         indice_to_remove_buy = self.orderbook_buy_offers[stock][self.orderbook_buy_offers[stock]['name'].str.contains(buyer_name)].head(1).index
         self.orderbook_buy_offers[stock].drop(indice_to_remove_buy)
@@ -48,13 +49,13 @@ class Environment():
     def create_candles(self):
         for stock in self.list_stocks:
             if len(self.transaction_list_one_day)>0:
-                open = self.transaction_list_one_day[stock][0]
-                close = self.transaction_list_one_day[stock][-1]
-                high = max(self.transaction_list_one_day[stock])
-                low = min(self.transaction_list_one_day[stock])
+                open = self.transaction_list_one_day[stock]["price"].to_list[0]
+                close = self.transaction_list_one_day[stock]["price"].to_list[-1]
+                high = max(self.transaction_list_one_day[stock]["price"].to_list)
+                low = min(self.transaction_list_one_day[stock]["price"].to_list)
                 new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
                 self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
-                self.transaction_list_one_day[stock] = []
+                self.transaction_list_one_day[stock] = pd.DataFrame(columns=["buyer", "seller","price"])
 
             else:
                 print(f"No Transactions tody for stock {stock}! Creating artificial data!")
