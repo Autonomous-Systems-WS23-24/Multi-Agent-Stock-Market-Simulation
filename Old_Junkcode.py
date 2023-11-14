@@ -17,3 +17,6 @@ class Stockmarket(Agent):
         print("Agent starting . . .")
         b = self.MyBehav()
         self.add_behaviour(b)
+
+
+
