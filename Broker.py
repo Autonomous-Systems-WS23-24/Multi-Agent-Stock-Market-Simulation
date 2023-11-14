@@ -52,7 +52,8 @@ class Broker(Agent):
                         warnings.filterwarnings("ignore", category=FutureWarning)
 
                         for stock, order in order_data.items():
-                            df_offer = pd.read_json(order, orient='split')
+                            df_offer = pd.read_json(order, orient='records')
+                            print(df_offer)
 
                             if np.isnan(df_offer['sell']):
                                 price = df_offer.loc[0, 'buy']
