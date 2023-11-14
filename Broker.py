@@ -49,7 +49,6 @@ class Broker(Agent):
                         for stock, df_offer in order_data.items():
                             # Code for adding buy offer to environment
                             if np.isnan(df_offer['sell']):
-                                stock = ''
                                 price = df_offer.loc[0, 'buy']
                                 quantity = df_offer.loc[0, 'quantity']
                                 investor_name = offers.sender
@@ -57,7 +56,6 @@ class Broker(Agent):
 
 
                             elif np.isnan(df_offer['buy']):
-                                stock = ''
                                 price = df_offer.loc[0, 'sell']
                                 quantity = df_offer.loc[0, 'quantity']
                                 investor_name = offers.sender
