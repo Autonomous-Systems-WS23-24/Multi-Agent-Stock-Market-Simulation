@@ -73,7 +73,7 @@ class Investor(Agent):
             strategy_func = getattr(Strategies, strategy, None)
             orders = strategy_func(stockdata,self.agent.environment.list_stocks,self.agent.risk_factor,self.agent.money,self.agent.stock_count,self.agent.opinions,self.agent.social_influence)
             json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
-            msg = Message(to="Broker@localhost")  # Instantiate the message
+            msg = Message(to="broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
             msg.body = json.dumps(json_data)  # Set the message content
             await self.send(msg)

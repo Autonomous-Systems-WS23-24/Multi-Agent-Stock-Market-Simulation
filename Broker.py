@@ -11,6 +11,7 @@ from spade.message import Message
 import warnings
 import Strategies_classes
 import Strategies
+import json
 
 
 class Broker(Agent):
@@ -28,6 +29,8 @@ class Broker(Agent):
 
         async def run(self):
             self.investor_list = [f"investor{i}" for i in range(1, self.agent.num_investors + 1)]
+            await self.receive_offers()
+            await self.match()
 
             # end condition
             self.count += 1
@@ -68,7 +71,7 @@ class Broker(Agent):
                     continue
 
 
-        async def match(self, stock):
+        async def match(self):
             for stock in self.agent.environment.list_stocks:
                 df_buy = self.agent.environment.orderbook_buy_offers[stock]
                 df_sell = self.agent.environment.orderbook_sell_offers[stock]
