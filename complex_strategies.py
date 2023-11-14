@@ -24,6 +24,7 @@ def strategy1(stockdata, risk_factor, money, stock_count):
     # Calculate position size based on risk factor and available capital
     position_size = int((risk_factor * money) / price_mean)
 
+    confidence = -risk_factor if risk_factor < 0.03 else risk_factor
 
     # Buying when RSI value is lower than dynamic buy threshold
     # and the mean price is 5 euro lower than the MA52. Buy the stock for the mean price
@@ -32,7 +33,7 @@ def strategy1(stockdata, risk_factor, money, stock_count):
         and price_mean <= (stockdata.at[stockdata.index[-1], "MA"] - 5 / (risk_factor)) 
         and money >= price_mean - 5
     ):
-        buy_price = price_mean + risk_factor*10   # if risk_factor is between -1 and 1
+        buy_price = price_mean + confidence*10   # if the risk is higher, investor risks buying for more price
         if money > 5 * buy_price:
             n = min(position_size,5)
 
@@ -43,7 +44,7 @@ def strategy1(stockdata, risk_factor, money, stock_count):
         or price_low <= (stockdata.at[stockdata.index[-1], "MA"] - 5 / risk_factor) 
         and stock_count > 0
     ):
-        sell_price = price_mean
+        sell_price = price_mean - confidence*10 # if the risk is higher, investor risks selling for less price
         if stock_count >= 5:
             n = min(position_size, stock_count)
 
@@ -71,6 +72,8 @@ def strategy2(stockdata,risk_factor,money,stock_count):
 
     # Calculate position size based on risk factor and available capital
     position_size = int((risk_factor * money) / price_mean)
+
+    confidence = -risk_factor if risk_factor < 0.03 else risk_factor
 
     # Calculate a simple moving average (SMA) over the last N periods.
     #Buying if the mean is higher than the sma
