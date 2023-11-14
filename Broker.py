@@ -23,9 +23,8 @@ class Broker(Agent):
         # Define a behavior to interact with the environment and air traffic control
         class BrokerBehaviour(CyclicBehaviour):
             async def on_start(self):
-                print(f"Starting {self.agent.jid} behaviour . . .")
+                print(f"Starting Broker. . .")
                 self.count = 0
-                self.stock_list = ["1"]
             async def run(self):
                 self.investor_list = [f"investor{i}" for i in range(1, self.agent.num_investors + 1)]
 
