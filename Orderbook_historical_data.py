@@ -44,12 +44,12 @@ class Orderbook(Agent):
             if self.count == self.agent.num_iterations:
                 self.kill()
             #print(self.offerbook)
-            self.calc_new_stockdata()
+            #self.calc_new_stockdata()
 
 
         async def on_end(self):
-            x = np.arange(0, len(self.stock_data["Close"].to_list()))
-            y = self.stock_data["Close"].to_list()
+            x = np.arange(0, len(self.stock_data_history["Close"].to_list()))
+            y = self.stock_data_history["Close"].to_list()
             plt.xlabel("days")
             plt.ylabel("value")
             plt.plot(x,y, label=f"Stock value")
@@ -63,8 +63,8 @@ class Orderbook(Agent):
             for investor in self.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-                msg.body = self.stock_data.to_json(
-                    orient="split")  # Set the message content
+                self.stock_data = self.stock_data_history[10+self.count:60+self.count]
+                msg.body = self.stock_data.to_json(orient="split")  # Set the message content
                 await self.send(msg)
 
         async def receive_offers(self):
@@ -125,27 +125,7 @@ class Orderbook(Agent):
                     msg.body = "--no transactions--"
                     await self.send(msg)
 
-        def calc_new_stockdata(self):
-            if not self.transaction_df.empty:
-                print("Transactions!")
-                close = rd.choice(self.transaction_df["price"].tolist())
-                open = rd.choice(self.transaction_df["price"].tolist())
-                low = self.transaction_df["price"].min()*rd.randrange(90,100)/100
-                high = (self.transaction_df["price"].max()*rd.randrange(100,110))/100
-                new_data = pd.DataFrame({"Close":close,"Open":open,"High": high,"Low":low},index=[0])
-                self.stock_data = pd.concat([self.stock_data,new_data],ignore_index=True)
 
-            else:
-                print("No transactions! Creating artificial Data!")
-                mean = (self.stock_data.at[self.stock_data.index[-1],"Low"]+ self.stock_data.at[self.stock_data.index[-1],"High"])/2
-                var = self.stock_data['Close'].rolling(10).std().mean()
-                random_price_data = np.random.normal(mean,var,20)
-                close = random_price_data[-1]
-                open = random_price_data[0]
-                low = random_price_data.min()
-                high = random_price_data.max()
-                new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low},index=[0])
-                self.stock_data = pd.concat([self.stock_data, new_data],ignore_index=True)
     async def setup(self):
         print("Orderbook starting . . .")
         template = Template()

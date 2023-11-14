@@ -17,13 +17,15 @@ import Strategies
 
 class Investor(Agent):
 
-    def __init__(self,jid,password,strategy,risk_factor,num_iterations=1000):
+    def __init__(self,jid,password,strategy,stock,money,risk_factor,num_iterations=1000):
         super().__init__(jid, password)
         self.strategy = strategy
         self.risk_factor = risk_factor
         self.networth_list = []
-        self.stock_count = 100
-        self.money = 500
+        self.asset_networth_list = []
+        self.money_list = []
+        self.stock_count = stock
+        self.money = money
         self.num_iterations = num_iterations
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
@@ -32,27 +34,38 @@ class Investor(Agent):
             self.stock_list = ["1"]
         async def run(self):
             # receive stockdata
-            await self.stockdata_receive()
+            await self.stockdata_receive_and_order()
             # send orderbook entry
             await self.orderbook_send()
             # receive transactions done
             await self.transactions_process()
+            self.count += 1
             if self.count == self.agent.num_iterations:
                 self.kill()
 
+
         async def on_end(self):
             x = np.arange(0,len(self.agent.networth_list))
-            plt.xlabel("days")
-            plt.ylabel("networth")
-            plt.plot(x,self.agent.networth_list, label= f"Networth of {self.agent.jid[0]}")
-            plt.ylim(0,max(self.agent.networth_list)*1.1)
-            plt.legend()
+
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))  # 1 row, 2 columns
+            # total networth
+            ax1.plot(x,self.agent.networth_list,label= f"Networth of {self.agent.jid[0]}")
+            ax1.set_title('networth total')
+            ax1.set_xlabel('days')
+            ax1.set_ylabel('networth')
+            ax1.legend()
+            # networth distribution
+            ax2.stackplot(x,self.agent.money_list,self.agent.asset_networth_list, labels= ["money","stock assets"])
+            ax2.set_title('networth distribution')
+            ax2.set_xlabel('days')
+            ax2.legend()
+            plt.tight_layout()
             plt.show()
 
-        async def stockdata_receive(self):
+
+        async def stockdata_receive_and_order(self):
             stockdata = await self.receive(timeout=10)  # wait for a message for 10 seconds
             if stockdata:
-                self.count += 1
                 # print("Stockdata received, count {}".format(self.count))
                 # Specify the file path where you want to save the text file
                 with warnings.catch_warnings():
@@ -62,16 +75,20 @@ class Investor(Agent):
                     # instantiate strategy using strategy_num by setting it manually
                     strategy = f'strategy{self.agent.strategy}'
                     strategy_func = getattr(Strategies, strategy, None)
-                    buy, sell = strategy_func(dataframe_stockdata,self.agent.risk_factor,self.agent.money,self.agent.stock_count)
+                    buy, sell, n = strategy_func(dataframe_stockdata,self.agent.risk_factor,self.agent.money,self.agent.stock_count)
                     orderbook_entry = {
                         "name": [self.agent.jid[0]],
                         "sell": [sell],
                         "buy": [buy]
                     }
                     self.orderbook_entry = pd.DataFrame(orderbook_entry)
-                    current_networth = round(self.agent.money + self.agent.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'])
+                    self.orderbook_entry = pd.concat([self.orderbook_entry]*n, ignore_index=True)
+                    current_networth = round(self.agent.money + self.agent.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'],2)
+                    asset_networth = round(self.agent.stock_count*dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'],2)
                     #print(f"{self.agent.jid} has {current_networth} Dollars of networth")
                     self.agent.networth_list.append(current_networth)
+                    self.agent.asset_networth_list.append(asset_networth)
+                    self.agent.money_list.append(self.agent.money)
             else:
                 print(f"{self.agent.jid} did not receive any stockdata after 10 seconds")
                 self.kill()
