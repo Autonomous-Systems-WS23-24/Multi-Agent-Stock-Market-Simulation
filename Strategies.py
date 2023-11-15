@@ -20,12 +20,12 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         sell_price = np.nan
         buy_price = np.nan
         # buying when RSI value is lower than 35, and the mean price is 5 euro lower than the MA52. Buy the stock for the mean price
-        if stockdata.at[stockdata.index[-1],"RSI"] < 35 and price_mean <= (stockdata.at[stockdata.index[-1],"MA"] - 5/risk_factor) and money >= price_mean - 5 :
-            buy_price = price_mean - 5
+        if stockdata.at[stockdata.index[-1],"RSI"] < 35 and price_mean <= stockdata.at[stockdata.index[-1],"MA"]*0.95/(1+risk_factor) and money >= price_mean*0.95 :
+            buy_price = price_mean*0.95
             if money > 5 * buy_price:
                 n = 5
         # selling when RSI value is higher than 40 or if the low price is 5 lower than MA52. Sell the stock for the mean price
-        elif stockdata.at[stockdata.index[-1],"RSI"] > 40 or price_low <= (stockdata.at[stockdata.index[-1],"MA"] - 5/risk_factor) and stock_count>0:
+        elif stockdata.at[stockdata.index[-1],"RSI"] > 40 or price_low <= (stockdata.at[stockdata.index[-1],"MA"]) and stock_count>0:
             sell_price = price_mean
             if stock_count>=5:
                 n=5
