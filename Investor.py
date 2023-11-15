@@ -69,15 +69,20 @@ class Investor(Agent):
 
         async def send_orders(self):
             stockdata = self.agent.environment.stock_candles  # wait for a message for 10 seconds
-            # instantiate strategy using strategy_num by setting it manually
-            strategy = f'strategy{self.agent.strategy}'
-            strategy_func = getattr(Strategies, strategy, None)
-            orders = strategy_func(stockdata,self.agent.environment.list_stocks,self.agent.risk_factor,self.agent.money,self.agent.stock_count,self.agent.opinions,self.agent.social_influence)
+            orders = self.strategy(stockdata)
             json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
             msg = Message(to="broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
             msg.body = json.dumps(json_data)  # Set the message content
             await self.send(msg)
+
+        def strategy(self,stockdata):
+            strategy = f'strategy{self.agent.strategy}'
+            strategy_func = getattr(Strategies, strategy, None)
+            orders = strategy_func(stockdata, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
+                          self.agent.stock_count, self.agent.opinions, self.agent.social_influence)
+            return orders
+
 
         async def ownership_update(self):
             for stock in self.agent.stock_list:
