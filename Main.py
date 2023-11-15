@@ -10,7 +10,7 @@ import os
 
 async def main(stock_list):
     num_investors = 10
-    num_iterations = 100
+    num_iterations = 1000
     risk_factors = np.arange(1,3.1,0.1)
     money_list = []
     stock_ownership_list = []

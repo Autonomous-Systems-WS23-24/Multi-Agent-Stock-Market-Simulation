@@ -20,18 +20,20 @@ class Investor(Agent):
 
     def __init__(self,jid,password,environment,strategy,stock,money,risk_factor,stock_list,num_iterations=1000):
         super().__init__(jid, password)
-        self.environment = environment
-        self.stock_list = stock_list
+        self.environment = environment # environment
+        self.stock_list = stock_list #list of all stocks
+        # these are the basic attributes of an investor
         self.strategy = strategy
-        self.diversification_factor = 1
         self.social_influence = pd.DataFrame(columns=self.stock_list)
         self.opinions = pd.DataFrame(columns= self.stock_list)
         self.risk_factor = risk_factor
+        self.stock_count = stock
+        self.money = money
+        # here we define lists to keep track of the newtworth of every investor
         self.networth_list = []
         self.asset_networth_list = []
         self.money_list = []
-        self.stock_count = stock
-        self.money = money
+
         self.num_iterations = num_iterations
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
@@ -67,15 +69,20 @@ class Investor(Agent):
 
         async def send_orders(self):
             stockdata = self.agent.environment.stock_candles  # wait for a message for 10 seconds
-            # instantiate strategy using strategy_num by setting it manually
-            strategy = f'strategy{self.agent.strategy}'
-            strategy_func = getattr(Strategies, strategy, None)
-            orders = strategy_func(stockdata,self.agent.environment.list_stocks,self.agent.risk_factor,self.agent.money,self.agent.stock_count,self.agent.opinions,self.agent.social_influence)
+            orders = self.strategy(stockdata)
             json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
             msg = Message(to="broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
             msg.body = json.dumps(json_data)  # Set the message content
             await self.send(msg)
+
+        def strategy(self,stockdata):
+            strategy = f'strategy{self.agent.strategy}'
+            strategy_func = getattr(Strategies, strategy, None)
+            orders = strategy_func(stockdata, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
+                          self.agent.stock_count, self.agent.opinions, self.agent.social_influence)
+            return orders
+
 
         async def ownership_update(self):
             for stock in self.agent.stock_list:

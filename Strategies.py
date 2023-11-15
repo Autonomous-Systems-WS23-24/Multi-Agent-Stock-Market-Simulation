@@ -4,6 +4,7 @@ import pandas as pd
 
 def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence):
     offer = {}
+    significance_scores = {}
     for stock in list_stocks:
         stock_count = security_register[stock]
         stock_count = stock_count.loc[f'{jid}','quantity']
@@ -31,6 +32,7 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
                 n=5
             #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n },index=[0])
+        significance_scores[stock] = stockdata["RSI"].mean
    # new_offer = modifyoffer(opininos,social_influence)    we here put a linear transform on the offers dependent on personal beliefs and social influences
 
     return offer

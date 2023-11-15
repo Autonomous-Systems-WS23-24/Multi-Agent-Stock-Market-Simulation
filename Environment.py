@@ -56,7 +56,7 @@ class Environment():
                 pd.DataFrame({"quantity": [0]}, index=[seller]))
 
         self.security_register[stock].at[f'{buyer}','quantity'] += 1
-        self.security_register[stock].at[f'{seller}', 'quantity'] += 1
+        self.security_register[stock].at[f'{seller}', 'quantity'] -= 1
 
         print(self.security_register[stock])
 
