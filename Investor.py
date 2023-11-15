@@ -79,7 +79,7 @@ class Investor(Agent):
         def strategy(self,stockdata):
             strategy = f'strategy{self.agent.strategy}'
             strategy_func = getattr(Strategies, strategy, None)
-            orders = strategy_func(stockdata, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
+            orders = strategy_func(self.agent.jid, stockdata, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
                           self.agent.stock_count, self.agent.opinions, self.agent.social_influence)
             return orders
 
