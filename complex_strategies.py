@@ -1,4 +1,5 @@
 import talib as tl
+import numpy as np
 
 #added RSI thresholds 
 def strategy1(stockdata,stock_list, risk_factor, money, stock_count):
@@ -48,7 +49,6 @@ def strategy1(stockdata,stock_list, risk_factor, money, stock_count):
 
 # Added Stochastic Oscillator in buy and sell conditions
 def strategy2(stockdata,risk_factor,money,stock_count):
-    
     n=1
     price_low = stockdata.at[stockdata.index[-1], 'Low']
     price_high = stockdata.at[stockdata.index[-1], 'High']
@@ -147,8 +147,8 @@ def strategy4(stockdata, risk_factor, money, stock_count):
     # Calculate the signal line as a 9-period EMA of the MACD line
     signal_line = macd_line.ewm(span=signal_line_period, adjust=False).mean()
 
-    buy_price = 0
-    sell_price = 9999999999
+    buy_price = np.nan
+    sell_price = np.nan
 
     # Calculate position size based on risk factor and available capital
     position_size = max(1,int((risk_factor * money) / price_mean))  
