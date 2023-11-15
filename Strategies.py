@@ -2,10 +2,12 @@ import talib as tl
 import numpy as np
 import pandas as pd
 
-def strategy1(stockdata_dict,list_stocks,risk_factor,money,stock_count,opinions,social_influence):
+def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence):
     offer = {}
     significance_scores = {}
     for stock in list_stocks:
+        security_register_stock = security_register[stock]
+        stock_count = security_register_stock.loc[f'{jid[0]}','quantity']
         stockdata = stockdata_dict[stock]
         n=1
         # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.

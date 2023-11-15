@@ -58,6 +58,8 @@ class Environment():
         self.security_register[stock].at[f'{buyer}','quantity'] += 1
         self.security_register[stock].at[f'{seller}', 'quantity'] -= 1
 
+        print(self.security_register[stock])
+
         #Update orderbook
         self.transaction_list_one_day[stock] = pd.concat([self.transaction_list_one_day[stock], transaction], ignore_index=True)
         indice_to_remove_sell = self.orderbook_sell_offers[stock][self.orderbook_sell_offers[stock]['name'].str.contains(seller_name)].head(1).index
