@@ -56,7 +56,7 @@ class Environment():
                 pd.DataFrame({"quantity": [0]}, index=[seller]))
 
         self.security_register[stock].at[f'{buyer}','quantity'] += 1
-        self.security_register[stock].at[f'{seller}', 'quantity'] += 1
+        self.security_register[stock].at[f'{seller}', 'quantity'] -= 1
 
         #Update orderbook
         self.transaction_list_one_day[stock] = pd.concat([self.transaction_list_one_day[stock], transaction], ignore_index=True)
