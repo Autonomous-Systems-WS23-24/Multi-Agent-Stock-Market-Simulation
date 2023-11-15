@@ -84,7 +84,7 @@ class Broker(Agent):
                 matched_buyers = set()
                 matched_sellers = set()
 
-                for index in range(len(df_buy_sorted.index)):
+                for index in range(min(len(df_buy_sorted.index),len(df_sell_sorted))):
                     buyer_name = df_buy_sorted["name"][index]
                     seller_name = df_sell_sorted["name"][index]
 
