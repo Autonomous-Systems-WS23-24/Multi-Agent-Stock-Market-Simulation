@@ -29,7 +29,7 @@ class Investor(Agent):
         self.risk_factor = risk_factor
         self.stock_count = stock
         self.money = money
-        # here we define lists to keep track of the newtworth of every investor
+        # here we define lists to keep track of the networth of every investor
         self.networth_list = []
         self.asset_networth_list = []
         self.money_list = []
@@ -68,15 +68,15 @@ class Investor(Agent):
             plt.show()
 
         async def send_orders(self):
-            stockdata = self.agent.environment.stock_candles  # wait for a message for 10 seconds
-            orders = self.strategy(stockdata)
+            stockdata = self.agent.environment.stock_candles
+            orders = self.execute_strategy(stockdata)
             json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
             msg = Message(to="broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
             msg.body = json.dumps(json_data)  # Set the message content
             await self.send(msg)
 
-        def strategy(self,stockdata):
+        def execute_strategy(self,stockdata):
             strategy = f'strategy{self.agent.strategy}'
             strategy_func = getattr(Strategies, strategy, None)
             orders = strategy_func(stockdata, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
@@ -85,6 +85,7 @@ class Investor(Agent):
 
 
         async def ownership_update(self):
+            assets_values = 0
             for stock in self.agent.stock_list:
                 daily_transactions_stock = self.agent.environment.transaction_list_one_day[stock]
                 buys = daily_transactions_stock['buyer'].str.contains(str(self.agent.jid[0]))
@@ -95,6 +96,13 @@ class Investor(Agent):
                 for price in daily_transactions_stock["price"][sells]:
                     self.agent.money += price
                     self.agent.stock_count[stock] -= 1
+                stock_value = (self.agent.environment.stock_candles[stock].iloc[-1].loc["High"]+self.agent.environment.stock_candles[stock].iloc[-1].loc["Low"])/2
+                assets_values += stock_value*self.agent.environment.security_register[stock].loc[self.agent.jid[0],"quantity"]
+            self.agent.asset_networth_list.append(assets_values)
+            self.agent.money_list.append(self.agent.money)
+            self.agent.networth_list.append(self.agent.money+assets_values)
+
+
         async def socialize(self):
             for investor in self.agent.investor_list:
                 msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
