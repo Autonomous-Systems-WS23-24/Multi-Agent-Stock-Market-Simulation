@@ -50,7 +50,6 @@ class Investor(Agent):
 
         async def on_end(self):
             x = np.arange(0,len(self.agent.networth_list))
-
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))  # 1 row, 2 columns
             # total networth
             ax1.plot(x,self.agent.networth_list,label= f"Networth of {self.agent.jid[0]}")

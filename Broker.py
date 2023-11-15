@@ -43,7 +43,7 @@ class Broker(Agent):
 
                 if offers:
                     #print(offers.body)
-                    print(f"Offers from Agent {offers.sender} received!")
+                    #print(f"Offers from Agent {offers.sender} received!")
                     received_data = json.loads(offers.body)  # Assuming received_message is the message you received
                     order_data = {stock: order for stock, order in received_data.items()}
                    # print(received_data)
@@ -78,7 +78,6 @@ class Broker(Agent):
             for stock in self.agent.environment.list_stocks:
                 df_buy = self.agent.environment.orderbook_buy_offers[stock]
                 df_sell = self.agent.environment.orderbook_sell_offers[stock]
-                print(df_buy)
                 df_buy_sorted = df_buy.sort_values(by="buy", ascending=False).reset_index(drop=True)
                 df_sell_sorted = df_sell.sort_values(by="sell").reset_index(drop=True)
 
