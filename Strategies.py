@@ -6,7 +6,7 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
     offer = {}
     significance_scores = {}
     for stock in list_stocks:
-        stock_count = security_register.loc[jid,stock]
+        stock_count = security_register.at[jid,stock]
         print(stock_count)
         stockdata = stockdata_dict[stock]
         n=1
