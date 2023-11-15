@@ -27,7 +27,6 @@ class Environment():
             self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
             self.orderbook_buy_offers[stock] = pd.DataFrame(columns=["name", "buy"])
             self.transaction_list_one_day[stock] = pd.DataFrame(columns=["buyer", "seller","price"])
-            print(self.transaction_list_one_day[stock])
 
 
 
@@ -53,7 +52,7 @@ class Environment():
 
         #Update orderbook
         self.transaction_list_one_day[stock] = pd.concat([self.transaction_list_one_day[stock], transaction], ignore_index=True)
-        print(self.transaction_list_one_day)
+        #print(self.transaction_list_one_day)
         indice_to_remove_sell = self.orderbook_sell_offers[stock][self.orderbook_sell_offers[stock]['name'].str.contains(seller_name)].head(1).index
         indice_to_remove_buy = self.orderbook_buy_offers[stock][self.orderbook_buy_offers[stock]['name'].str.contains(buyer_name)].head(1).index
         self.orderbook_buy_offers[stock].drop(indice_to_remove_buy, inplace=True)
@@ -63,21 +62,18 @@ class Environment():
 
     def create_candles(self):
         for stock in self.list_stocks:
-            if len(self.transaction_list_one_day[stock])>0:
-                #print(self.transaction_list_one_day)
-                #print(len(self.transaction_list_one_day))
+            if len(self.transaction_list_one_day[stock].index)>1:
                 open = self.transaction_list_one_day[stock]["price"].iloc[-1]
                 close = self.transaction_list_one_day[stock]["price"].iloc[-1]
                 high = self.transaction_list_one_day[stock]["price"].max
                 low = self.transaction_list_one_day[stock]["price"].min
                 new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
                 self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
-                self.transaction_list_one_day[stock] = pd.DataFrame(columns=["buyer", "seller","price"])
+                self.transaction_list_one_day[stock].reset_index()
 
             else:
                 #print(f"No Transactions tody for stock {stock}! Creating artificial data!")
-                mean = (self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "Low"] + self.stock_candles[stock].at[
-                    self.stock_candles[stock].index[-1], "High"]) / 2
+                mean = (self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "Low"] + self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "High"]) / 2
                 var = self.stock_candles[stock]['Close'].rolling(10).std().mean()
                 random_price_data = np.random.normal(mean, var, 20)
                 close = random_price_data[-1]

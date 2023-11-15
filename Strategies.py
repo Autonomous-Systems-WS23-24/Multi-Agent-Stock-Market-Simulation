@@ -12,8 +12,8 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
         # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
         stockdata["RSI"] = tl.RSI(stockdata['Close'], timeperiod=14)
-        price_low = stockdata.at[stockdata.index[-1], 'Low']
-        price_high = stockdata.at[stockdata.index[-1], 'High']
+        price_low = stockdata.at[stockdata.index[-1], "Low"]
+        price_high = stockdata.at[stockdata.index[-1], "High"]
         price_mean = (price_low + price_high) / 2
         # moving average of last 52 days
         stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=26, matype=0)
@@ -43,8 +43,8 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         stock_count = security_register.at[jid, stock]
         stockdata = stockdata_dict[stock]
         n = 1
-        price_low = stockdata.at[stockdata.index[-1], 'Low']
-        price_high = stockdata.at[stockdata.index[-1], 'High']
+        price_low = stockdata.at[stockdata.index[-1], "Low"]
+        price_high = stockdata.at[stockdata.index[-1], "High"]
         price_mean = (price_low + price_high) / 2
 
         k_period = 14
@@ -93,8 +93,8 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         n = 1
         bb_period = 20
         num_std_dev = 2
-        price_low = stockdata.at[stockdata.index[-1], 'Low']
-        price_high = stockdata.at[stockdata.index[-1], 'High']
+        price_low = stockdata.at[stockdata.index[-1],"Low"]
+        price_high = stockdata.at[stockdata.index[-1],"High"]
         price_mean = (price_low + price_high) / 2
 
         stockdata['RollingMean'] = stockdata['Close'].rolling(bb_period).mean()
@@ -139,8 +139,8 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         n = 1
         short_term_period = 12
         long_term_period = 26
-        price_low = stockdata.at[stockdata.index[-1], 'Low']
-        price_high = stockdata.at[stockdata.index[-1], 'High']
+        price_low = stockdata.at[stockdata.index[-1], "Low"]
+        price_high = stockdata.at[stockdata.index[-1], "High"]
         price_mean = (price_low + price_high) / 2
 
         short_term_ema = stockdata['Close'].ewm(span=short_term_period, adjust=False).mean()
