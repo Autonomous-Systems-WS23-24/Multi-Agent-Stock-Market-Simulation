@@ -18,7 +18,7 @@ import json
 
 class Investor(Agent):
 
-    def __init__(self,jid,password,environment,strategy,stock,money,risk_factor,stock_list,num_iterations=1000):
+    def __init__(self,jid,password,environment,strategy,money,risk_factor,stock_list,num_iterations=1000):
         super().__init__(jid, password)
         self.environment = environment # environment
         self.stock_list = stock_list #list of all stocks
@@ -27,7 +27,6 @@ class Investor(Agent):
         self.social_influence = pd.DataFrame(columns=self.stock_list)
         self.opinions = pd.DataFrame(columns= self.stock_list)
         self.risk_factor = risk_factor
-        self.stock_count = stock
         self.money = money
         # here we define lists to keep track of the networth of every investor
         self.networth_list = []
@@ -68,18 +67,17 @@ class Investor(Agent):
             plt.show()
 
         async def send_orders(self):
-            stockdata = self.agent.environment.stock_candles
-            orders = self.execute_strategy(stockdata)
+            orders = self.execute_strategy()
             json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
             msg = Message(to="broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
             msg.body = json.dumps(json_data)  # Set the message content
             await self.send(msg)
 
-        def execute_strategy(self,stockdata):
+        def execute_strategy(self):
             strategy = f'strategy{self.agent.strategy}'
             strategy_func = getattr(Strategies, strategy, None)
-            orders = strategy_func(self.agent.jid, stockdata, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
+            orders = strategy_func(self.agent.jid[0], self.agent.environment.stock_candles, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
                           self.agent.environment.security_register, self.agent.opinions, self.agent.social_influence)
             return orders
 
@@ -92,12 +90,12 @@ class Investor(Agent):
                 sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
                 for price in daily_transactions_stock["price"][buys]:
                     self.agent.money -= price
-                    self.agent.stock_count[stock] += 1
+                    self.agent.environment.security_register.at[self.agent.jid[0], stock] += 1
                 for price in daily_transactions_stock["price"][sells]:
                     self.agent.money += price
-                    self.agent.stock_count[stock] -= 1
+                    self.agent.environment.security_register.at[self.agent.jid[0],stock] -= 1
                 stock_value = (self.agent.environment.stock_candles[stock].iloc[-1].loc["High"]+self.agent.environment.stock_candles[stock].iloc[-1].loc["Low"])/2
-                assets_values += stock_value*self.agent.environment.security_register[stock][self.agent.jid[0]]
+                assets_values += stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock]
             self.agent.asset_networth_list.append(assets_values)
             self.agent.money_list.append(self.agent.money)
             self.agent.networth_list.append(self.agent.money+assets_values)
