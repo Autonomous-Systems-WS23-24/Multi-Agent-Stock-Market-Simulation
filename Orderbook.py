@@ -146,6 +146,7 @@ class Orderbook(Agent):
                 high = random_price_data.max()
                 new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low},index=[0])
                 self.stock_data = pd.concat([self.stock_data, new_data],ignore_index=True)
+
     async def setup(self):
         print("Orderbook starting . . .")
         template = Template()

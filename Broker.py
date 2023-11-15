@@ -69,11 +69,13 @@ class Broker(Agent):
                             else:
                                 continue
                 else:
-                    print("Broker did not receive any stockdata after 10 seconds")
+                    print("Broker did not receive any offers after 10 seconds")
                     continue
+            self.agent.environment.create_candles()
 
 
         async def match_transactions(self):
+            processed_stock= 0
             for stock in self.agent.environment.list_stocks:
                 df_buy = self.agent.environment.orderbook_buy_offers[stock]
                 df_sell = self.agent.environment.orderbook_sell_offers[stock]
@@ -96,11 +98,23 @@ class Broker(Agent):
                     matched_buyers.add(buyer_name)
                     matched_sellers.add(seller_name)
                     # Convert the list of dictionaries into a DataFrame
-            self.agent.environment.create_candles()
 
+            for investor in range(1, self.agent.num_investors + 1):
+                msg = Message(to="investor{}@localhost".format(investor))  # Instantiate the message
+                msg.set_metadata("performative", "inform")  # Set the "query" FIPA performative
+                msg.body = "--transactions_done--"
+                await self.send(msg)
 
         async def on_end(self):
-            pass
+            for stock in self.agent.stock_list:
+                x = np.arange(0, len(self.agent.environment.stock_candles[stock]["Close"].to_list()))
+                y = self.agent.environment.stock_candles[stock]["Close"].to_list()
+                plt.xlabel("days")
+                plt.ylabel("value")
+                plt.plot(x, y, label=f"Stock {stock} candles")
+                plt.ylim(0, max(y) * 1.1)
+                plt.legend()
+                plt.show()
 
     async def setup(self):
         # Add the behavior to the agent

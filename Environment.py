@@ -23,7 +23,7 @@ class Environment():
         self.transaction_list_one_day = {}
         self.security_register = ownership_frame
         for stock in self.list_stocks:
-            self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[:52]
+            self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[500:560]
             self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
             self.orderbook_buy_offers[stock] = pd.DataFrame(columns=["name", "buy"])
             self.transaction_list_one_day[stock] = pd.DataFrame(columns=["buyer", "seller","price"])
@@ -62,11 +62,11 @@ class Environment():
 
     def create_candles(self):
         for stock in self.list_stocks:
-            if len(self.transaction_list_one_day[stock].index)>1:
+            if len(self.transaction_list_one_day[stock].index)>3:
                 open = self.transaction_list_one_day[stock]["price"].iloc[-1]
                 close = self.transaction_list_one_day[stock]["price"].iloc[-1]
-                high = self.transaction_list_one_day[stock]["price"].max
-                low = self.transaction_list_one_day[stock]["price"].min
+                high = self.transaction_list_one_day[stock]["price"].max()
+                low = self.transaction_list_one_day[stock]["price"].min()
                 new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
                 self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
                 self.transaction_list_one_day[stock].reset_index()
@@ -78,9 +78,10 @@ class Environment():
                 random_price_data = np.random.normal(mean, var, 20)
                 close = random_price_data[-1]
                 open = random_price_data[0]
-                low = random_price_data.min()
-                high = random_price_data.max()
+                low = min(random_price_data)
+                high = max(random_price_data)
                 new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
+                #print(new_data)
                 self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
 
 
