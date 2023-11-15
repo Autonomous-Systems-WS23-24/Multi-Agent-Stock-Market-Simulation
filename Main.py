@@ -14,7 +14,7 @@ async def main(stock_list):
     risk_factors = np.arange(1,3.1,0.1)
     money_list = [i for i in range(len(stock_list))]
     stock_ownership_list = []
-    environment = Environment.Environment(stock_list)
+    environment = Environment.Environment(stock_list,num_investors)
     Agent_Broker = Broker.Broker("broker@localhost", "1234",environment,num_investors,stock_list,num_iterations=num_iterations)
     investors = [Investor.Investor(f"investor{i}@localhost", "1234",environment,1,(i%4)*10,(i%5)*100,risk_factors[i],stock_list,num_iterations=num_iterations) for i in range(1, num_investors + 1)]
     tasks = []

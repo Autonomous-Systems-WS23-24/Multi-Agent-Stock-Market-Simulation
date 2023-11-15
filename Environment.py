@@ -25,10 +25,13 @@ class Environment():
         self.security_register = {}
         for stock in self.list_stocks:
             self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[:52]
-            self.orderbook_sell_offers[stock] =  pd.DataFrame(columns=["name", "sell"])
-            self.orderbook_buy_offers[stock] =  pd.DataFrame(columns=["name", "buy"])
+            self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
+            self.orderbook_buy_offers[stock] = pd.DataFrame(columns=["name", "buy"])
             self.transaction_list_one_day[stock] = pd.DataFrame(columns=["buyer", "seller","price"])
-            self.security_register[stock] = pd.DataFrame(columns=["owner", "quantity"])
+            self.security_register[stock] = {}
+            for investor in self.investor_list:
+                self.security_register[stock][investor] = 10
+
 
 
     def put_buy_offer(self,stock,price,quantity,investor_name):
@@ -96,5 +99,3 @@ class Environment():
 
 
 
-list_stocks = ["zoes.us.txt"]
-environment = Environment(list_stocks)

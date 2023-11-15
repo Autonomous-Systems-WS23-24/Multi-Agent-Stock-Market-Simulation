@@ -97,7 +97,7 @@ class Investor(Agent):
                     self.agent.money += price
                     self.agent.stock_count[stock] -= 1
                 stock_value = (self.agent.environment.stock_candles[stock].iloc[-1].loc["High"]+self.agent.environment.stock_candles[stock].iloc[-1].loc["Low"])/2
-                assets_values += stock_value*self.agent.environment.security_register[stock].loc[self.agent.jid[0],"quantity"]
+                assets_values += stock_value*self.agent.environment.security_register[stock][self.agent.jid[0]]
             self.agent.asset_networth_list.append(assets_values)
             self.agent.money_list.append(self.agent.money)
             self.agent.networth_list.append(self.agent.money+assets_values)
