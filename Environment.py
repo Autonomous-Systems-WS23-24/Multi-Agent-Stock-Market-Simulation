@@ -15,22 +15,18 @@ import talib as tl
 
 
 class Environment():
-    def __init__(self, list_stocks,num_investors):
+    def __init__(self, list_stocks,ownership_frame):
         self.list_stocks = list_stocks
-        self.investor_list = [f"investor{i}"for i in range(1,num_investors+1)]
         self.stock_candles = {}
         self.orderbook_sell_offers = {}
         self.orderbook_buy_offers = {}
         self.transaction_list_one_day = {}
-        self.security_register = {}
+        self.security_register = ownership_frame
         for stock in self.list_stocks:
             self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[:52]
             self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
             self.orderbook_buy_offers[stock] = pd.DataFrame(columns=["name", "buy"])
             self.transaction_list_one_day[stock] = pd.DataFrame(columns=["buyer", "seller","price"])
-            self.security_register[stock] = {}
-            for investor in self.investor_list:
-                self.security_register[stock][investor] = 10
 
 
 
@@ -51,16 +47,8 @@ class Environment():
         buyer = transaction["buyer"].iloc[0]
         seller = transaction["seller"].iloc[0]
 
-        if buyer not in self.security_register[stock].index:
-            self.security_register[stock] = self.security_register[stock].append(
-                pd.DataFrame({"quantity": [0]}, index=[buyer]))
-
-        if seller not in self.security_register[stock].index:
-            self.security_register[stock] = self.security_register[stock].append(
-                pd.DataFrame({"quantity": [0]}, index=[seller]))
-
-        self.security_register[stock].at[f'{buyer}','quantity'] += 1
-        self.security_register[stock].at[f'{seller}', 'quantity'] -= 1
+        self.security_register.loc[self.security_register['Investor'] == buyer, stock]  += 1
+        self.security_register.loc[self.security_register['Investor'] == seller, stock] -= 1
 
         print(self.security_register[stock])
 

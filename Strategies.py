@@ -6,8 +6,8 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
     offer = {}
     significance_scores = {}
     for stock in list_stocks:
-        security_register_stock = security_register[stock]
-        stock_count = security_register_stock[jid]
+        stock_count = security_register.loc[jid,stock]
+        print(stock_count)
         stockdata = stockdata_dict[stock]
         n=1
         # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
