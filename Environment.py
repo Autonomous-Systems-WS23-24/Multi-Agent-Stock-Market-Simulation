@@ -15,8 +15,9 @@ import talib as tl
 
 
 class Environment():
-    def __init__(self, list_stocks):
+    def __init__(self, list_stocks,num_investors):
         self.list_stocks = list_stocks
+        self.investor_list = [f"investor{i}"for i in range(1,num_investors+1)]
         self.stock_candles = {}
         self.orderbook_sell_offers = {}
         self.orderbook_buy_offers = {}
