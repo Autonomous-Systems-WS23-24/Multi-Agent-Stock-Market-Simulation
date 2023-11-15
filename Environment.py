@@ -21,11 +21,13 @@ class Environment():
         self.orderbook_sell_offers = {}
         self.orderbook_buy_offers = {}
         self.transaction_list_one_day = {}
+        self.security_register = {}
         for stock in self.list_stocks:
             self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[:52]
             self.orderbook_sell_offers[stock] =  pd.DataFrame(columns=["name", "sell"])
             self.orderbook_buy_offers[stock] =  pd.DataFrame(columns=["name", "buy"])
             self.transaction_list_one_day[stock] = pd.DataFrame(columns=["buyer", "seller","price"])
+            self.security_register[stock] = pd.DataFrame(columns=["owner", "quantity"])
 
 
     def put_buy_offer(self,stock,price,quantity,investor_name):
@@ -40,11 +42,30 @@ class Environment():
 
     def do_transaction(self,stock,price,buyer_name,seller_name):
         transaction = pd.DataFrame({"buyer": buyer_name, "seller": seller_name, "price": price}, index=[0])
+
+        # processing transaction to update security register
+        buyer = transaction["buyer"].iloc[0]
+        seller = transaction["seller"].iloc[0]
+
+        if buyer not in self.security_register[stock].index:
+            self.security_register[stock] = self.security_register[stock].append(
+                pd.DataFrame({"quantity": [0]}, index=[buyer]))
+
+        if seller not in self.security_register[stock].index:
+            self.security_register[stock] = self.security_register[stock].append(
+                pd.DataFrame({"quantity": [0]}, index=[seller]))
+
+        self.security_register[stock].at[f'{buyer}','quantity'] += 1
+        self.security_register[stock].at[f'{seller}', 'quantity'] += 1
+
+        #Update orderbook
         self.transaction_list_one_day[stock] = pd.concat([self.transaction_list_one_day[stock], transaction], ignore_index=True)
         indice_to_remove_sell = self.orderbook_sell_offers[stock][self.orderbook_sell_offers[stock]['name'].str.contains(seller_name)].head(1).index
         indice_to_remove_buy = self.orderbook_buy_offers[stock][self.orderbook_buy_offers[stock]['name'].str.contains(buyer_name)].head(1).index
-        self.orderbook_buy_offers[stock].drop(indice_to_remove_buy)
-        self.orderbook_sell_offers[stock].drop(indice_to_remove_sell)
+        self.orderbook_buy_offers[stock].drop(indice_to_remove_buy, inplace=True)
+        self.orderbook_sell_offers[stock].drop(indice_to_remove_sell, inplace=True)
+
+
 
     def create_candles(self):
         for stock in self.list_stocks:
