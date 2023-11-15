@@ -20,18 +20,20 @@ class Investor(Agent):
 
     def __init__(self,jid,password,environment,strategy,stock,money,risk_factor,stock_list,num_iterations=1000):
         super().__init__(jid, password)
-        self.environment = environment
-        self.stock_list = stock_list
+        self.environment = environment # environment
+        self.stock_list = stock_list #list of all stocks
+        # these are the basic attributes of an investor
         self.strategy = strategy
-        self.diversification_factor = 1
         self.social_influence = pd.DataFrame(columns=self.stock_list)
         self.opinions = pd.DataFrame(columns= self.stock_list)
         self.risk_factor = risk_factor
+        self.stock_count = stock
+        self.money = money
+        # here we define lists to keep track of the newtworth of every investor
         self.networth_list = []
         self.asset_networth_list = []
         self.money_list = []
-        self.stock_count = stock
-        self.money = money
+
         self.num_iterations = num_iterations
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
