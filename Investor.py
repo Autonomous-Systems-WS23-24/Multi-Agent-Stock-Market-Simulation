@@ -83,27 +83,26 @@ class Investor(Agent):
         async def ownership_update(self):
             conf = await self.receive(timeout=10)
             if conf:
-                pass
-            assets_values = 0
-            for stock in self.agent.stock_list:
-                daily_transactions_stock = self.agent.environment.transaction_list_one_day[stock]
-                buys = daily_transactions_stock['buyer'].str.contains(str(self.agent.jid[0]))
-                sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
-                for price in daily_transactions_stock["price"][buys]:
-                    self.agent.money -= price
-                    self.agent.environment.security_register.at[self.agent.jid[0], stock] += 1
-                for price in daily_transactions_stock["price"][sells]:
-                    self.agent.money += price
-                    self.agent.environment.security_register.at[self.agent.jid[0],stock] -= 1
-                stock_high = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"High"]
-                stock_low = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"Low"]
-                stock_value = (stock_low+stock_high)/2
+                assets_values = 0
+                for stock in self.agent.stock_list:
+                    daily_transactions_stock = self.agent.environment.transaction_list_one_day[stock]
+                    buys = daily_transactions_stock['buyer'].str.contains(str(self.agent.jid[0]))
+                    sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
+                    for price in daily_transactions_stock["price"][buys]:
+                        self.agent.money -= price
+                        self.agent.environment.security_register.at[self.agent.jid[0], stock] += 1
+                    for price in daily_transactions_stock["price"][sells]:
+                        self.agent.money += price
+                        self.agent.environment.security_register.at[self.agent.jid[0],stock] -= 1
+                    stock_high = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"High"]
+                    stock_low = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"Low"]
+                    stock_value = (stock_low+stock_high)/2
 
-                assets_values += stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock]
+                    assets_values += stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock]
 
-            self.agent.asset_networth_list.append(assets_values)
-            self.agent.money_list.append(self.agent.money)
-            self.agent.networth_list.append(self.agent.money+assets_values)
+                self.agent.asset_networth_list.append(assets_values)
+                self.agent.money_list.append(self.agent.money)
+                self.agent.networth_list.append(self.agent.money+assets_values)
 
 
         async def socialize(self):

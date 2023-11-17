@@ -50,6 +50,7 @@ class Broker(Agent):
                         warnings.filterwarnings("ignore", category=FutureWarning)
 
                         for stock, order in order_data.items():
+
                             df_offer = pd.read_json(order, orient='records')
                             #print(df_offer)
 
@@ -102,12 +103,15 @@ class Broker(Agent):
                     matched_buyers.add(buyer_name)
                     matched_sellers.add(seller_name)
 
-
-
                     # Convert the list of dictionaries into a DataFrame
                     #print(f"{self.agent.environment.security_register.at[seller_name, stock]}, {seller_name}, {stock}")
                     print(self.agent.environment.security_register)
                     #print(self.agent.environment.transaction_list_one_day)
+
+            for stock in self.agent.environment.list_stocks:
+                # Remove old offers that have not been matched
+                self.agent.environment.orderbook_buy_offers[stock].drop(self.agent.environment.orderbook_buy_offers[stock].index, inplace=True)
+                self.agent.environment.orderbook_sell_offers[stock].drop(self.agent.environment.orderbook_sell_offers[stock].index, inplace=True)
 
             for investor in range(1, self.agent.num_investors + 1):
                 msg = Message(to="investor{}@localhost".format(investor))  # Instantiate the message
