@@ -1,6 +1,5 @@
 import asyncio
 import io
-
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
@@ -12,8 +11,7 @@ from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 from spade.message import Message
 import warnings
-import Strategies_classes
-import Strategies
+import Strategies2
 import json
 
 class Investor(Agent):
@@ -76,9 +74,10 @@ class Investor(Agent):
 
         def execute_strategy(self):
             strategy = f'strategy{self.agent.strategy}'
-            strategy_func = getattr(Strategies, strategy, None)
+            strategy_func = getattr(Strategies2, strategy, None)
             orders = strategy_func(self.agent.jid[0], self.agent.environment.stock_candles, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
                           self.agent.environment.security_register, self.agent.opinions, self.agent.social_influence)
+
             return orders
 
         async def ownership_update(self):

@@ -9,7 +9,6 @@ from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 from spade.message import Message
 import warnings
-import Strategies_classes
 import Strategies
 import json
 
@@ -45,7 +44,7 @@ class Broker(Agent):
                     #print(f"Offers from Agent {offers.sender} received!")
                     received_data = json.loads(offers.body)  # Assuming received_message is the message you received
                     order_data = {stock: order for stock, order in received_data.items()}
-                   # print(received_data)
+                    #print(received_data)
 
                     with warnings.catch_warnings():
                         warnings.filterwarnings("ignore", category=FutureWarning)
@@ -64,7 +63,8 @@ class Broker(Agent):
                                 price = df_offer.loc[0, 'sell']
                                 quantity = df_offer.loc[0, 'quantity']
                                 investor_name = offers.sender[0]
-                                self.agent.environment.put_sell_offer(stock, price, quantity, investor_name)
+                                if self.agent.environment.security_register.at[investor_name, stock] >= quantity:
+                                    self.agent.environment.put_sell_offer(stock, price, quantity, investor_name)
 
                             else:
                                 continue
@@ -92,12 +92,22 @@ class Broker(Agent):
                     if buyer_name == seller_name:
                         continue  # Skip matching the buyer and seller with the same name
 
-                    price = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index]) / 2, 2)
                     #transaction = {"buyer": buyer_name, "seller": seller_name, "price": price}
-                    self.agent.environment.do_transaction(stock, price, buyer_name, seller_name)
+                    price = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index]) / 2, 2)
+
+                    #Double check if seller has the stock
+                    if self.agent.environment.security_register.at[seller_name, stock] >= 1:
+                        self.agent.environment.do_transaction(stock, price, buyer_name, seller_name)
+
                     matched_buyers.add(buyer_name)
                     matched_sellers.add(seller_name)
+
+
+
                     # Convert the list of dictionaries into a DataFrame
+                    #print(f"{self.agent.environment.security_register.at[seller_name, stock]}, {seller_name}, {stock}")
+                    print(self.agent.environment.security_register)
+                    #print(self.agent.environment.transaction_list_one_day)
 
             for investor in range(1, self.agent.num_investors + 1):
                 msg = Message(to="investor{}@localhost".format(investor))  # Instantiate the message
@@ -106,6 +116,8 @@ class Broker(Agent):
                 await self.send(msg)
 
         async def on_end(self):
+            print('Broker finished iterations')
+            print(self.agent.environment.security_register)
             for stock in self.agent.stock_list:
                 x = np.arange(0, len(self.agent.environment.stock_candles[stock]["Close"].to_list()))
                 y = self.agent.environment.stock_candles[stock]["Close"].to_list()
