@@ -47,6 +47,7 @@ class Environment():
         buyer = transaction["buyer"].iloc[0]
         seller = transaction["seller"].iloc[0]
 
+
         self.security_register.at[buyer, stock]  += 1
         self.security_register.at[seller, stock] -= 1
 
@@ -62,17 +63,18 @@ class Environment():
 
     def create_candles(self):
         for stock in self.list_stocks:
-            if len(self.transaction_list_one_day[stock].index)>3:
+            if len(self.transaction_list_one_day[stock].index)>0:
                 open = self.transaction_list_one_day[stock]["price"].iloc[-1]
                 close = self.transaction_list_one_day[stock]["price"].iloc[-1]
                 high = self.transaction_list_one_day[stock]["price"].max()
                 low = self.transaction_list_one_day[stock]["price"].min()
                 new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
                 self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
-                self.transaction_list_one_day[stock].reset_index()
+                self.transaction_list_one_day[stock].drop(self.transaction_list_one_day[stock].index, inplace=True)
+                #print(f'Today {self.transaction_list_one_day[stock]} for {stock}')
 
             else:
-                #print(f"No Transactions tody for stock {stock}! Creating artificial data!")
+                print(f"No Transactions tody for stock {stock}! Creating artificial data!")
                 mean = (self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "Low"] + self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "High"]) / 2
                 var = self.stock_candles[stock]['Close'].rolling(10).std().mean()
                 random_price_data = np.random.normal(mean, var, 20)
@@ -83,6 +85,7 @@ class Environment():
                 new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
                 #print(new_data)
                 self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
+                self.transaction_list_one_day[stock].reset_index()
 
 
 

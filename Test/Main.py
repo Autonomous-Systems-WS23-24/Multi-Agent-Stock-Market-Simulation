@@ -1,42 +1,41 @@
 import asyncio
-import pandas as pd
-from matplotlib import pyplot as plt
 import numpy as np
+import pandas as pd
 import spade
-import talib as tl
 from spade import wait_until_finished
-from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour
-from spade.template import Template
-import Orderbook
-import Orderbook_historical_data
 import Investor
 import Environment
 import Broker
+import os
 
-
-
-async def main():
-    num_investors = 2
+async def main(stock_list):
+    num_investors = 5
     num_iterations = 100
+    list_investors = [f"investor{i}"for i in range(1,num_investors+1)]
+    data = {
+        'Investor': list_investors,
+        **{stock: np.random.randint(1, 101, size=len(list_investors)) for stock in stock_list}
+    }
+    ownership_frame = pd.DataFrame(data)
+    ownership_frame.set_index("Investor", inplace=True)
+    print(ownership_frame)
     risk_factors = np.arange(1,3.1,0.1)
-    money_list = []
-    list_stocks = ["zoes.us.txt"]
-    environment = Environment(list_stocks)
-    Broker = Broker.Broker("Broker@localhost", "1234", num_investors, num_iterations=num_iterations, environment=environment)
-    investors = [Investor.Investor(f"investor{i}@localhost", "1234",(i%4)+1,(i%4)*10,(i%5)*100,risk_factors[i],num_iterations=num_iterations, environment=environment) for i in range(1, num_investors + 1)]
+    money_list = [i for i in range(len(stock_list))]
+    stock_ownership_list = []
+    environment = Environment.Environment(stock_list, ownership_frame)
+    Agent_Broker = Broker.Broker("broker@localhost", "1234",environment,num_investors,stock_list,num_iterations=num_iterations)
+    investors = [Investor.Investor(f"investor{i}@localhost", "1234",environment,(i%1)+1,(i%5)*1000,0.5,stock_list,num_iterations=num_iterations) for i in range(1, num_investors + 1)]
     tasks = []
+    await Agent_Broker.start()
     for investor in investors:
         tasks.append(investor.start())
     await asyncio.gather(*tasks)
-    await Broker.start()
     print("Wait until user interrupts with ctrl+C")
-    #Broker.web.start(hostname="127.0.0.1", port="10000")
-    tasks = []
-    await wait_until_finished(Broker)
-    for investor in investors:
-        tasks.append(wait_until_finished(investor))
-    await asyncio.gather(*tasks)
+    await wait_until_finished(Agent_Broker)
 
 if __name__ == "__main__":
-    spade.run(main())
+    package_dir = os.path.dirname(os.path.abspath(__file__))
+    data_directory = os.path.join(package_dir, '../archive/Stocks')
+    stock_list = os.listdir(data_directory)
+    spade.run(main(stock_list))
+

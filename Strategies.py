@@ -16,11 +16,11 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         price_high = stockdata.at[stockdata.index[-1], "High"]
         price_mean = (price_low + price_high) / 2
         # moving average of last 52 days
-        stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=26, matype=0)
+        stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=52, matype=0)
         sell_price = np.nan
         buy_price = np.nan
         # buying when RSI value is lower than 35, and the mean price is 5 euro lower than the MA52. Buy the stock for the mean price
-        if stockdata.at[stockdata.index[-1],"RSI"] < 35 and price_mean <= stockdata.at[stockdata.index[-1],"MA"] and money >= price_mean*0.97 :
+        if stockdata.at[stockdata.index[-1],"RSI"] < RSI and price_mean <= stockdata.at[stockdata.index[-1],"MA"] and money >= price_mean*0.97 :
             buy_price = price_mean*0.97
             if money > 5 * buy_price:
                 n = 5

@@ -1,6 +1,5 @@
 import asyncio
 import io
-
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
@@ -12,8 +11,7 @@ from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 from spade.message import Message
 import warnings
-import Strategies_classes
-import Strategies
+import Strategies2
 import json
 
 class Investor(Agent):
@@ -76,35 +74,35 @@ class Investor(Agent):
 
         def execute_strategy(self):
             strategy = f'strategy{self.agent.strategy}'
-            strategy_func = getattr(Strategies, strategy, None)
+            strategy_func = getattr(Strategies2, strategy, None)
             orders = strategy_func(self.agent.jid[0], self.agent.environment.stock_candles, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
                           self.agent.environment.security_register, self.agent.opinions, self.agent.social_influence)
+
             return orders
 
         async def ownership_update(self):
             conf = await self.receive(timeout=10)
             if conf:
-                pass
-            assets_values = 0
-            for stock in self.agent.stock_list:
-                daily_transactions_stock = self.agent.environment.transaction_list_one_day[stock]
-                buys = daily_transactions_stock['buyer'].str.contains(str(self.agent.jid[0]))
-                sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
-                for price in daily_transactions_stock["price"][buys]:
-                    self.agent.money -= price
-                    self.agent.environment.security_register.at[self.agent.jid[0], stock] += 1
-                for price in daily_transactions_stock["price"][sells]:
-                    self.agent.money += price
-                    self.agent.environment.security_register.at[self.agent.jid[0],stock] -= 1
-                stock_high = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"High"]
-                stock_low = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"Low"]
-                stock_value = (stock_low+stock_high)/2
+                assets_values = 0
+                for stock in self.agent.stock_list:
+                    daily_transactions_stock = self.agent.environment.transaction_list_one_day[stock]
+                    buys = daily_transactions_stock['buyer'].str.contains(str(self.agent.jid[0]))
+                    sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
+                    for price in daily_transactions_stock["price"][buys]:
+                        self.agent.money -= price
+                      #  self.agent.environment.security_register.at[self.agent.jid[0], stock] += 1
+                    for price in daily_transactions_stock["price"][sells]:
+                        self.agent.money += price
+                       # self.agent.environment.security_register.at[self.agent.jid[0],stock] -= 1
+                    stock_high = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"High"]
+                    stock_low = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"Low"]
+                    stock_value = (stock_low+stock_high)/2
 
-                assets_values += stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock]
+                    assets_values += stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock]
 
-            self.agent.asset_networth_list.append(assets_values)
-            self.agent.money_list.append(self.agent.money)
-            self.agent.networth_list.append(self.agent.money+assets_values)
+                self.agent.asset_networth_list.append(assets_values)
+                self.agent.money_list.append(self.agent.money)
+                self.agent.networth_list.append(self.agent.money+assets_values)
 
 
         async def socialize(self):

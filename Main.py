@@ -3,14 +3,13 @@ import numpy as np
 import pandas as pd
 import spade
 from spade import wait_until_finished
-import Orderbook
 import Investor
 import Environment
 import Broker
 import os
 
 async def main(stock_list):
-    num_investors = 5
+    num_investors = 20
     num_iterations = 100
     list_investors = [f"investor{i}"for i in range(1,num_investors+1)]
     data = {
@@ -20,7 +19,7 @@ async def main(stock_list):
     ownership_frame = pd.DataFrame(data)
     ownership_frame.set_index("Investor", inplace=True)
     print(ownership_frame)
-    risk_factors = np.arange(1,3.1,0.1)
+    risk_factors = np.arange(0,1.1,0.05)
     money_list = [i for i in range(len(stock_list))]
     stock_ownership_list = []
     environment = Environment.Environment(stock_list, ownership_frame)
@@ -39,4 +38,3 @@ if __name__ == "__main__":
     data_directory = os.path.join(package_dir, 'archive/Stocks')
     stock_list = os.listdir(data_directory)
     spade.run(main(stock_list))
-

@@ -1,6 +1,5 @@
 import asyncio
 import io
-
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
@@ -12,57 +11,44 @@ from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 from spade.message import Message
 import warnings
-import Strategies_classes
-import Strategies
+import Strategies2
+import json
 
 class Investor(Agent):
-    def __init__(self, jid, password, strategy, stock, money, risk_factor, num_iterations, environment):
+
+    def __init__(self,jid,password,environment,strategy,money,risk_factor,stock_list,num_iterations=1000):
         super().__init__(jid, password)
+        self.environment = environment # environment
+        self.stock_list = stock_list #list of all stocks
+        # these are the basic attributes of an investor
         self.strategy = strategy
+        self.social_influence = pd.DataFrame(columns=self.stock_list)
+        self.opinions = pd.DataFrame(columns= self.stock_list)
         self.risk_factor = risk_factor
+        self.money = money
+        # here we define lists to keep track of the networth of every investor
         self.networth_list = []
         self.asset_networth_list = []
         self.money_list = []
-        self.stock_count = stock
-        self.money = money
+
         self.num_iterations = num_iterations
-        environment = environment
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
             print(f"Starting {self.agent.jid} behaviour . . .")
             self.count = 0
-            self.stock_list = ["1"]
         async def run(self):
-            # receive stockdata
-            dataframe_stockdata = self.agent.environment.stock_candles
-            # use strategy and define buy and sell prices
-            strategy = f'strategy{self.agent.strategy}'
-            strategy_func = getattr(Strategies, strategy, None)
-            buy, sell, n = strategy_func(dataframe_stockdata, self.agent.risk_factor, self.agent.money, self.agent.stock_count)
-            orderbook_entry = {
-                "name": [self.agent.jid[0]],
-                "sell": [sell],
-                "buy": [buy]
-            }
-            self.orderbook_entry = pd.DataFrame(orderbook_entry)
-            self.orderbook_entry = pd.concat([self.orderbook_entry] * n, ignore_index=True)
-            current_networth = round(self.agent.money + self.agent.stock_count * dataframe_stockdata.at[
-                dataframe_stockdata.index[-1], 'Close'], 2)
-            asset_networth = round(
-            self.agent.stock_count * dataframe_stockdata.at[dataframe_stockdata.index[-1], 'Close'], 2)
-            # print(f"{self.agent.jid} has {current_networth} Dollars of networth")
-            self.agent.networth_list.append(current_networth)
-            self.agent.asset_networth_list.append(asset_networth)
-            self.agent.money_list.append(self.agent.money)
-
-            # end statement
+            # look at stockdata and receive orders
+            await self.send_orders()
+            # look if you sold some stock
+            await self.ownership_update()
+            # receive transactions done
             self.count += 1
             if self.count == self.agent.num_iterations:
                 self.kill()
 
+
         async def on_end(self):
             x = np.arange(0,len(self.agent.networth_list))
-
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))  # 1 row, 2 columns
             # total networth
             ax1.plot(x,self.agent.networth_list,label= f"Networth of {self.agent.jid[0]}")
@@ -78,32 +64,58 @@ class Investor(Agent):
             plt.tight_layout()
             plt.show()
 
-        async def orderbook_send(self):
-            print(f" Investor{self.agent.jid} Sending Buy and Sell Offers to The orderbook ")
-            msg = Message(to="Orderbook@localhost")  # Instantiate the message
+        async def send_orders(self):
+            orders = self.execute_strategy()
+            json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
+            msg = Message(to="broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
-            msg.set_metadata("ontology", "myOntology")  # Set the ontology of the message content
-            msg.set_metadata("language", "OWL-S")  # Set the language of the message content
-            msg.body = self.orderbook_entry.to_json(orient="split")  # Set the message content
+            msg.body = json.dumps(json_data)  # Set the message content
             await self.send(msg)
 
-        async def transactions_process(self):
-            transactions = await self.receive(timeout=10)  # wait for a message for 10 seconds
-            if transactions:
-                if "no" in transactions.body:
-                    pass
-                else:
-                    with warnings.catch_warnings():
-                        warnings.filterwarnings("ignore", category=FutureWarning)
-                        df_transactions = pd.read_json(transactions.body, orient="split")
-                    buys = df_transactions['buyer'].str.contains(str(self.agent.jid[0]))
-                    sells = df_transactions['seller'].str.contains(str(self.agent.jid[0]))
-                    for price in df_transactions["price"][buys]:
-                        self.agent.money -= price
-                        self.agent.stock_count += 1
-                    for price in df_transactions["price"][sells]:
-                        self.agent.money += price
-                        self.agent.stock_count -= 1
+        def execute_strategy(self):
+            strategy = f'strategy{self.agent.strategy}'
+            strategy_func = getattr(Strategies2, strategy, None)
+            orders = strategy_func(self.agent.jid[0], self.agent.environment.stock_candles, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
+                          self.agent.environment.security_register, self.agent.opinions, self.agent.social_influence)
+
+            return orders
+
+        async def ownership_update(self):
+            conf = await self.receive(timeout=10)
+            if conf:
+                pass
+            assets_values = 0
+            for stock in self.agent.stock_list:
+                daily_transactions_stock = self.agent.environment.transaction_list_one_day[stock]
+                buys = daily_transactions_stock['buyer'].str.contains(str(self.agent.jid[0]))
+                sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
+                for price in daily_transactions_stock["price"][buys]:
+                    self.agent.money -= price
+                    self.agent.environment.security_register.at[self.agent.jid[0], stock] += 1
+                for price in daily_transactions_stock["price"][sells]:
+                    self.agent.money += price
+                    self.agent.environment.security_register.at[self.agent.jid[0],stock] -= 1
+                stock_high = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"High"]
+                stock_low = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"Low"]
+                stock_value = (stock_low+stock_high)/2
+
+                assets_values += stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock]
+
+            self.agent.asset_networth_list.append(assets_values)
+            self.agent.money_list.append(self.agent.money)
+            self.agent.networth_list.append(self.agent.money+assets_values)
+
+
+        async def socialize(self):
+            for investor in self.agent.investor_list:
+                msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
+                msg.set_metadata("performative", "inform")  # Set the "query" FIPA performative
+                msg.body = self.agent.opinions.to_json(orient="split")  # Set the message content
+                await self.send(msg)
+            for investor in self.agent.investor_list:
+                pass
+
+
     async def setup(self):
         print(f"{self.jid} started . . .")
         b = self.InvestBehav()
