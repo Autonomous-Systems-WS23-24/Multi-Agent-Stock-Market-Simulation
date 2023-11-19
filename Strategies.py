@@ -141,6 +141,7 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         long_term_period = 26
         price_low = stockdata.at[stockdata.index[-1], "Low"]
         price_high = stockdata.at[stockdata.index[-1], "High"]
+        stockdata["MA"]= tl.MA(stockdata['Close'], timeperiod=20, matype=0)
         price_mean = (price_low + price_high) / 2
 
         short_term_ema = stockdata['Close'].ewm(span=short_term_period, adjust=False).mean()
@@ -157,12 +158,12 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         position_size = max(1, int((risk_factor * money) / price_mean))
         confidence = -risk_factor if risk_factor < 0.03 else risk_factor
 
-        if macd_line.iloc[-1] > signal_line.iloc[-1] and money >= stockdata.at[stockdata.index[-1], 'Close']:
+        if macd_line.iloc[-1] > signal_line.iloc[-1] and macd_line.iloc[-1] > stockdata.at[stockdata.index[-1], "MA"] and money >= stockdata.at[stockdata.index[-1], 'Close']:
             buy_price = price_mean + confidence * 5
             if money > 5 * buy_price:
                 n = min(position_size, 5)
 
-        elif macd_line.iloc[-1] < signal_line.iloc[-1] and stock_count > 0:
+        elif macd_line.iloc[-1] < signal_line.iloc[-1] and macd_line.iloc[-1] < stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0:
             sell_price = price_mean - confidence * 5
             if stock_count >= 5:
                 n = min(position_size, stock_count)
