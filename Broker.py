@@ -83,36 +83,26 @@ class Broker(Agent):
                 df_buy_sorted = df_buy.sort_values(by="buy", ascending=False).reset_index(drop=True)
                 df_sell_sorted = df_sell.sort_values(by="sell").reset_index(drop=True)
 
-                matched_buyers = set()
-                matched_sellers = set()
 
                 for index in range(min(len(df_buy_sorted.index),len(df_sell_sorted))):
                     buyer_name = df_buy_sorted["name"][index]
                     seller_name = df_sell_sorted["name"][index]
+                    # Double check if seller has the stock
+                    if df_buy_sorted["buy"][index] >= df_sell_sorted["sell"][index] and self.agent.environment.security_register.at[seller_name, stock] >= 1:
 
-                    if buyer_name == seller_name:
-                        continue  # Skip matching the buyer and seller with the same name
+                        #transaction = {"buyer": buyer_name, "seller": seller_name, "price": price}
+                        price = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index]) / 2, 2)
 
-                    #transaction = {"buyer": buyer_name, "seller": seller_name, "price": price}
-                    price = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index]) / 2, 2)
-
-                    #Double check if seller has the stock
-                    if self.agent.environment.security_register.at[seller_name, stock] >= 1:
                         self.agent.environment.do_transaction(stock, price, buyer_name, seller_name)
-
-                    matched_buyers.add(buyer_name)
-                    matched_sellers.add(seller_name)
-
                     # Convert the list of dictionaries into a DataFrame
                     #print(f"{self.agent.environment.security_register.at[seller_name, stock]}, {seller_name}, {stock}")
-                    print(self.agent.environment.security_register)
+                    #print(self.agent.environment.security_register)
                     #print(self.agent.environment.transaction_list_one_day)
 
             for stock in self.agent.environment.list_stocks:
                 # Remove old offers that have not been matched
                 self.agent.environment.orderbook_buy_offers[stock].drop(self.agent.environment.orderbook_buy_offers[stock].index, inplace=True)
                 self.agent.environment.orderbook_sell_offers[stock].drop(self.agent.environment.orderbook_sell_offers[stock].index, inplace=True)
-
             for investor in range(1, self.agent.num_investors + 1):
                 msg = Message(to="investor{}@localhost".format(investor))  # Instantiate the message
                 msg.set_metadata("performative", "inform")  # Set the "query" FIPA performative
@@ -121,7 +111,7 @@ class Broker(Agent):
 
         async def on_end(self):
             print('Broker finished iterations')
-            print(self.agent.environment.security_register)
+            #print(self.agent.environment.security_register)
             for stock in self.agent.stock_list:
                 x = np.arange(0, len(self.agent.environment.stock_candles[stock]["Close"].to_list()))
                 y = self.agent.environment.stock_candles[stock]["Close"].to_list()

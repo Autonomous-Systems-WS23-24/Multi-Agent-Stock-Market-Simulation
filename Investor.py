@@ -90,10 +90,10 @@ class Investor(Agent):
                     sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
                     for price in daily_transactions_stock["price"][buys]:
                         self.agent.money -= price
-                        self.agent.environment.security_register.at[self.agent.jid[0], stock] += 1
+                      #  self.agent.environment.security_register.at[self.agent.jid[0], stock] += 1
                     for price in daily_transactions_stock["price"][sells]:
                         self.agent.money += price
-                        self.agent.environment.security_register.at[self.agent.jid[0],stock] -= 1
+                       # self.agent.environment.security_register.at[self.agent.jid[0],stock] -= 1
                     stock_high = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"High"]
                     stock_low = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"Low"]
                     stock_value = (stock_low+stock_high)/2
