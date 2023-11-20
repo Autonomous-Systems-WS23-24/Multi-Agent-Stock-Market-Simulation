@@ -100,7 +100,7 @@ class Broker(Agent):
             # Update the reputation  of the stock
             try:
                 self.agent.environment.get_stock_reputation()
-            except: pass
+            except: print("orderbook was too slow this time! hopefully next time!")
 
             for stock in self.agent.environment.stock_list:
                 # Remove old offers that have not been matched
