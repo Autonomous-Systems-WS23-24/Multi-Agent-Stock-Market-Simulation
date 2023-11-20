@@ -21,7 +21,7 @@ class Investor(Agent):
         self.environment = environment # environment
         self.stock_list = stock_list #list of all stocks
         # these are the basic attributes of an investor
-        self.time_factor = time_factor
+        self.time_factor = round(time_factor,2)
         self.strategy = strategy
         self.social_influence = pd.DataFrame({stock: 0 for stock in self.stock_list},index=[0])
         self.risk_factor = risk_factor
@@ -63,7 +63,7 @@ class Investor(Agent):
                 y.append(self.agent.asset_value_lists[stock])
             y.append(self.agent.money_list)
             # total networth
-            ax1.plot(x,self.agent.networth_list,label= f"Networth of {self.agent.jid[0]}")
+            ax1.plot(x,self.agent.networth_list,label= f"{self.agent.jid[0]} uses strategy {self.agent.strategy} with time factor {self.agent.time_factor}")
             ax1.set_title('networth total')
             ax1.set_xlabel('days')
             ax1.set_ylabel('networth')
