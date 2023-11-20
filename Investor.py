@@ -22,26 +22,27 @@ class Investor(Agent):
         self.stock_list = stock_list #list of all stocks
         # these are the basic attributes of an investor
         self.strategy = strategy
-        self.social_influence = pd.DataFrame(columns=self.stock_list)
-        self.opinions = pd.DataFrame(columns= self.stock_list)
+        self.social_influence = pd.DataFrame({stock: 0 for stock in self.stock_list},index=[0])
         self.risk_factor = risk_factor
         self.money = money
+        self.social_weight = 1
         # here we define lists to keep track of the networth of every investor
         self.networth_list = []
         self.asset_networth_list = []
         self.money_list = []
-
+        self.opinions = pd.DataFrame({stock: np.random.rand() for stock in self.stock_list},index=[0])
         self.num_iterations = num_iterations
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
             print(f"Starting {self.agent.jid} behaviour . . .")
             self.count = 0
         async def run(self):
+            # give opinions of stock to other investors
+            await self.socialize()
             # look at stockdata and receive orders
             await self.send_orders()
-            # look if you sold some stock
+            #  update money and networth if stock was sold
             await self.ownership_update()
-            # receive transactions done
             self.count += 1
             if self.count == self.agent.num_iterations:
                 self.kill()
@@ -90,10 +91,8 @@ class Investor(Agent):
                     sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
                     for price in daily_transactions_stock["price"][buys]:
                         self.agent.money -= price
-                      #  self.agent.environment.security_register.at[self.agent.jid[0], stock] += 1
                     for price in daily_transactions_stock["price"][sells]:
                         self.agent.money += price
-                       # self.agent.environment.security_register.at[self.agent.jid[0],stock] -= 1
                     stock_high = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"High"]
                     stock_low = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"Low"]
                     stock_value = (stock_low+stock_high)/2
@@ -106,13 +105,9 @@ class Investor(Agent):
 
 
         async def socialize(self):
-            for investor in self.agent.investor_list:
-                msg = Message(to="{}@localhost".format(investor))  # Instantiate the message
-                msg.set_metadata("performative", "inform")  # Set the "query" FIPA performative
-                msg.body = self.agent.opinions.to_json(orient="split")  # Set the message content
-                await self.send(msg)
-            for investor in self.agent.investor_list:
-                pass
+            self.agent.environment.push_opinions(self.agent.jid[0],self.agent.opinions,self.agent.social_weight)
+
+
 
 
     async def setup(self):
