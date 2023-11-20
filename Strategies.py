@@ -1,6 +1,7 @@
 import talib as tl
 import numpy as np
 import pandas as pd
+import math
 
 
 #Stategy 1 is a short-term strategy using RSI for calculating buy and sell prizes
@@ -50,8 +51,6 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
 
         new_opinion[stock] = round(abs(0.5-stockdata.at[stockdata.index[-1], "RSI"]),2)
-        if np.isnan(new_opinion[stock]):
-            new_opinion[stock] = 0.1
 
     new_opinions = pd.DataFrame(new_opinion, index=[0])
     new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
@@ -100,8 +99,7 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
         new_opinion[stock] = abs((stockdata.at[stockdata.index[-1],"RollingMean"]-stockdata.at[stockdata.index[-1],"Close"])/stockdata.at[stockdata.index[-1],"RollingMean"])
-        if np.isnan(new_opinion[stock]):
-            new_opinion[stock] = 0.1
+
 
     new_opinions = pd.DataFrame(new_opinion, index=[0])
     new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
@@ -154,8 +152,7 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
         new_opinion[stock] = abs(stockdata.at[stockdata.index[-1],"%D"])
-        if np.isnan(new_opinion[stock]):
-            new_opinion[stock] = 0.1
+
 
     new_opinions = pd.DataFrame(new_opinion, index=[0])
     new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
@@ -206,9 +203,8 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
             n = stock_count
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
-        new_opinion[stock] = abs(short_term_ema-stockdata.at[stockdata.index[-1],"Close"])
-        if np.isnan(new_opinion[stock]):
-            new_opinion[stock]=0.1
+        new_opinion[stock] = abs(short_term_ema.iloc[-1]-stockdata.at[stockdata.index[-1],"Close"]/short_term_ema.iloc[-1])
+
 
     new_opinions = pd.DataFrame(new_opinion, index=[0])
     new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)

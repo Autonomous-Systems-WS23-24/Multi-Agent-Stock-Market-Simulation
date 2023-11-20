@@ -41,5 +41,5 @@ async def main(num_investors,num_iterations):
 
 if __name__ == "__main__":
     num_investors = 10
-    num_iterations = 100
+    num_iterations = 300
     spade.run(main(num_investors,num_iterations))
