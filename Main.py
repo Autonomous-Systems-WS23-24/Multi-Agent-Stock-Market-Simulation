@@ -33,7 +33,7 @@ async def main(num_investors,num_iterations):
     # initialize agents and environment
     environment = Environment.Environment(stock_list, ownership_frame,list_investors)
     Agent_Broker = Broker.Broker("broker@localhost", "1234",environment,num_investors,stock_list,num_iterations=num_iterations)
-    investors = [Investor.Investor(f"investor{i}@localhost", "1234",environment,(i%4)+1,(i%5)*1000,random.uniform(0, 1),1,stock_list,random.uniform(0.2, 1),random.uniform(0,1),num_iterations=num_iterations) for i in range(1, num_investors + 1)]
+    investors = [Investor.Investor(f"investor{i}@localhost", "1234",environment,(i%4)+1,(i%5)*1000,random.uniform(0, 1),1,stock_list,random.uniform(0.2, 1),random.uniform(0.5,1),num_iterations=num_iterations) for i in range(1, num_investors + 1)]
     tasks = []
     await Agent_Broker.start()
     for investor in investors:

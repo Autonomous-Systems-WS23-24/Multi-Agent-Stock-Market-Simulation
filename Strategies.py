@@ -38,7 +38,7 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         if (stockdata.at[stockdata.index[-1], "RSI"] < RSI_buy_threshold
                 and price_mean <= stockdata.at[stockdata.index[-1], "MA"]) and money_to_spend >= price_mean:
 
-            buy_price = price_mean * 0.97
+            buy_price = price_mean
             n = int(np.floor(money_to_spend/buy_price))
             if n == 0:
                 sell_price = np.nan
@@ -48,7 +48,7 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
         elif (stockdata.at[stockdata.index[-1], "RSI"] > RSI_sell_threshold
               and price_low >= stockdata.at[stockdata.index[-1], "MA"]) and stock_count > 0:
-            sell_price = (price_mean + price_high) / 2
+            sell_price = price_mean
             n = stock_count
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
@@ -94,14 +94,14 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
         # Conditions for creating buy and sell offers using Bollinger Bands
         if price_mean < stockdata.at[stockdata.index[-1], 'LowerBand'] and money_to_spend >= price_mean:
-            buy_price = price_mean
+            buy_price = stockdata.at[stockdata.index[-1],'RollingMean']
             n = int(np.floor(money_to_spend / buy_price))
             if n == 0:
                 sell_price = np.nan
                 buy_price = np.nan
 
         elif price_mean > stockdata.at[stockdata.index[-1], 'UpperBand'] and stock_count >= n:
-            sell_price = (price_mean + price_high) / 2
+            sell_price = stockdata.at[stockdata.index[-1],'RollingMean']
             n = stock_count
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
@@ -149,7 +149,7 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         position_size = max(1, int((risk_factor * money) / price_mean))
 
         if price_mean < stockdata.at[stockdata.index[-1], "MA"] and money_to_spend >= price_mean and stockdata['%K'].iloc[-1] < 20:
-            buy_price = price_mean
+            buy_price = stockdata.at[stockdata.index[-1], "MA"]
             n = int(np.floor(money_to_spend / buy_price))
             if n == 0:
                 sell_price = np.nan
@@ -157,7 +157,7 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
 
         elif price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0 and stockdata['%K'].iloc[-1] > 80:
-            sell_price = (price_mean + price_high) / 2
+            sell_price = stockdata['Close'].rolling(window=k_period).mean()
             n = stock_count
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
@@ -205,14 +205,14 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
 
         if macd_line.iloc[-1] > signal_line.iloc[-1] and money >= stockdata.at[stockdata.index[-1], 'Close']:
-            buy_price = price_mean
+            buy_price =  short_term_ema.iloc[-1]
             n = int(np.floor(money_to_spend / buy_price))
             if n == 0:
                 sell_price = np.nan
                 buy_price = np.nan
 
         elif macd_line.iloc[-1] < signal_line.iloc[-1] and stock_count > 0:
-            sell_price = (price_mean + price_high) / 2
+            sell_price = short_term_ema.iloc[-1]
             n = stock_count
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
