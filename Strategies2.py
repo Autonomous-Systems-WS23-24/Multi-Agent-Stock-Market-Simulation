@@ -6,8 +6,8 @@ import pandas as pd
 #Stategy 1 is a short-term strategy using RSI for calculating buy and sell prizes
 def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence, time_factor, influencibility_index):
     total_buy_price = 0
-    print(opinions)
-    print(social_influence)
+    print(type(opinions))
+    print(type(social_influence))
     # opinions = opinions.tolist()
     # social_influence = social_influence.tolist()
     offer = {}
@@ -33,8 +33,9 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         stockdata["RSI"] = tl.RSI(stockdata['Close'], timeperiod=time_period)
         rsi_mean = stockdata["RSI"].mean()
         rsi_std = stockdata["RSI"].std()
-        RSI_buy_threshold = rsi_mean - 0.01 * rsi_std
-        RSI_sell_threshold = rsi_mean + 0.01 * rsi_std
+        risk_adjustment = risk_factor * rsi_std
+        RSI_buy_threshold = rsi_mean - 0.01 * risk_adjustment
+        RSI_sell_threshold = rsi_mean + 0.01 * risk_adjustment
 
         #moving average
         stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=time_period, matype=0)
@@ -97,13 +98,14 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         stockdata['RollingStd'] = stockdata['Close'].rolling(bb_period).std()
         stockdata['UpperBand'] = stockdata['RollingMean'] + (num_std_dev * stockdata['RollingStd'])
         stockdata['LowerBand'] = stockdata['RollingMean'] - (num_std_dev * stockdata['RollingStd'])
+        risk_threshold = risk_factor * stockdata['RollingStd']
 
         # Conditions for creating buy and sell offers using Bollinger Bands
-        if price_mean < stockdata.at[stockdata.index[-1], 'LowerBand'] and money_to_spend >= price_mean:
+        if price_mean < stockdata.at[stockdata.index[-1], 'LowerBand'] and money_to_spend >= price_mean and stockdata.at[stockdata.index[-1], 'RollingStd'] > risk_threshold:
             buy_price = price_mean
             n = np.floor(money_to_spend / buy_price)
 
-        elif price_mean > stockdata.at[stockdata.index[-1], 'UpperBand'] and stock_count >= n:
+        elif price_mean > stockdata.at[stockdata.index[-1], 'UpperBand'] and stock_count >= n and stockdata.at[stockdata.index[-1], 'RollingStd'] > risk_threshold:
             sell_price = (price_mean + price_high) / 2
             n = stock_count
 
@@ -144,17 +146,22 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
                                  (stockdata['High'].rolling(window=k_period).max() - stockdata['Low'].rolling(window=k_period).min()))
         stockdata['%D'] = stockdata['%K'].rolling(window=d_period).mean()
 
+        #setting risk thresholds
+        risk_adjustment = risk_factor * 30
+        buy_threshold = 20 + risk_adjustment
+        sell_threshold = 80 - risk_adjustment
+
         # moving average
         time_period = int(50 * time_factor)
         stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=time_period, matype=0)
         position_size = max(1, int((risk_factor * money) / price_mean))
 
-        if price_mean < stockdata.at[stockdata.index[-1], "MA"] and money_to_spend >= price_mean and stockdata['%K'].iloc[-1] < 20:
+        if price_mean < stockdata.at[stockdata.index[-1], "MA"] and money_to_spend >= price_mean and stockdata['%K'].iloc[-1] < buy_threshold:
             buy_price = price_mean
             n = np.floor(money_to_spend / buy_price)
 
 
-        elif price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0 and stockdata['%K'].iloc[-1] > 80:
+        elif price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0 and stockdata['%K'].iloc[-1] > sell_threshold:
             sell_price = (price_mean + price_high) / 2
             n = stock_count
 
@@ -198,9 +205,10 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         signal_line_period = 9 #stays constant
         signal_line = macd_line.ewm(span=signal_line_period, adjust=False).mean()
         position_size = max(1, int((money) / price_mean))
+        risk_adjustment = risk_factor * 0.02
 
 
-        if macd_line.iloc[-1] > signal_line.iloc[-1] and money >= stockdata.at[stockdata.index[-1], 'Close']:
+        if macd_line.iloc[-1] > signal_line.iloc[-1] and money >= stockdata.at[stockdata.index[-1], 'Close']*(1 - risk_adjustment):
             buy_price = price_mean
             n = np.floor(money_to_spend / buy_price)
 
