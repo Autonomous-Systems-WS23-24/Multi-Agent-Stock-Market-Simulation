@@ -29,7 +29,7 @@ class Broker(Agent):
             print(f"Starting Broker. . .")
             self.count = 0
             # to giuve the investors time to start
-            await asyncio.sleep(1)
+            await asyncio.sleep(3)
 
         async def run(self):
             await self.receive_offers()
