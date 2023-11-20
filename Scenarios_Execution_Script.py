@@ -1,5 +1,8 @@
 import Main
 
 
+
+
 if __name__ == "__main__":
-    Main.main(stock_list):
+    for scenario in scenarios:
+        Main.main(scenario)

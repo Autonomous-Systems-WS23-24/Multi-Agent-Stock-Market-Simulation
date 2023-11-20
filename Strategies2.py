@@ -53,9 +53,9 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
 
-        new_opinion[stock] = stockdata["RSI"].mean()
+        new_opinion[stock] = round(abs(0.5-stockdata.at[stockdata.index[-1], "RSI"]),2)
 
-    new_opinions = abs(pd.DataFrame(new_opinion, index=[0]))
+    new_opinions = pd.DataFrame(new_opinion, index=[0])
     new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
 
     return offer, new_opinions
@@ -99,7 +99,7 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
             n = min(n, stock_count)  # Adjust quantity based on the number of stocks held
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
-        new_opinion[stock] = abs(stockdata["Close"].mean())
+        new_opinion[stock] = abs((stockdata.at[stockdata.index[-1],"RollingMean"]-stockdata.at[stockdata.index[-1],"Close"])/stockdata.at[stockdata.index[-1],"RollingMean"])
 
     new_opinions = pd.DataFrame(new_opinion, index=[0])
     new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
@@ -137,7 +137,6 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
 
         position_size = max(1, int((risk_factor * money) / price_mean))
-        confidence = -risk_factor if risk_factor < 0.03 else risk_factor
 
         if (
                 price_mean < stockdata.at[stockdata.index[-1], "MA"] and money >= price_mean
@@ -157,7 +156,7 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
                 n = min(position_size, stock_count)
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
-        new_opinion[stock] = abs(stockdata['%K'].mean())
+        new_opinion[stock] = abs(stockdata.at[stockdata.index[-1],"%D"])
 
     new_opinions = pd.DataFrame(new_opinion, index=[0])
     new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
@@ -206,7 +205,7 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
                 n = stock_count
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
-        new_opinion[stock] = abs(macd_line.mean())
+        new_opinion[stock] = abs(short_term_ema-stockdata.at[stockdata.index[-1],"Close"])
 
     new_opinions = pd.DataFrame(new_opinion, index=[0])
     new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
