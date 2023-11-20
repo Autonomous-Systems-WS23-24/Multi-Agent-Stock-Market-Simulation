@@ -5,7 +5,6 @@ import pandas as pd
 
 #Stategy 1 is a short-term strategy using RSI for calculating buy and sell prizes
 def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence, time_factor, influencibility_index):
-    total_buy_price = 0
     print(type(opinions))
     print(type(social_influence))
     # opinions = opinions.tolist()
@@ -46,16 +45,19 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
         # conditions for creating buy and sell offers
         if (stockdata.at[stockdata.index[-1], "RSI"] < RSI_buy_threshold
-                and price_mean <= stockdata.at[stockdata.index[-1], "MA"]) and money_to_spend >= price_mean:
-
+                and price_mean <= stockdata.at[stockdata.index[-1], "MA"]):
             buy_price = price_mean * 0.97
             n = np.floor(money_to_spend/buy_price)
-
+            if n == 0:
+                sell_price = np.nan
+                buy_price = np.nan
+                
 
         elif (stockdata.at[stockdata.index[-1], "RSI"] > RSI_sell_threshold
               and price_low >= stockdata.at[stockdata.index[-1], "MA"]) and stock_count > 0:
             sell_price = (price_mean + price_high) / 2
             n = stock_count
+
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
 
@@ -73,7 +75,6 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 #Strategy 2 uses Bollinger bands for calculating buy and sell prices
 def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence, time_factor,  influencibility_index):
     offer = {}
-    total_buy_price = 0
     new_opinion = {}
     for stock, index in zip(list_stocks, range(len(list_stocks))):
         # Initialize values
@@ -101,9 +102,12 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         risk_threshold = risk_factor * stockdata['RollingStd']
 
         # Conditions for creating buy and sell offers using Bollinger Bands
-        if price_mean < stockdata.at[stockdata.index[-1], 'LowerBand'] and money_to_spend >= price_mean and stockdata.at[stockdata.index[-1], 'RollingStd'] > risk_threshold:
+        if price_mean < stockdata.at[stockdata.index[-1], 'LowerBand'] and stockdata.at[stockdata.index[-1], 'RollingStd'] > risk_threshold:
             buy_price = price_mean
             n = np.floor(money_to_spend / buy_price)
+            if n == 0:
+                sell_price = np.nan
+                buy_price = np.nan
 
         elif price_mean > stockdata.at[stockdata.index[-1], 'UpperBand'] and stock_count >= n and stockdata.at[stockdata.index[-1], 'RollingStd'] > risk_threshold:
             sell_price = (price_mean + price_high) / 2
@@ -121,10 +125,8 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
 #Strategy 3 uses the stochastic oscillator and moving average of the last 52 days
 def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence,time_factor, influencibility_index):
-    total_buy_price = 0
     offer = {}
     new_opinion = {}
-    significance_scores = {}
     for stock, index in zip(list_stocks, range(len(list_stocks))):
         # initialize values
         stock_count = security_register.at[jid, stock]
@@ -156,9 +158,13 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=time_period, matype=0)
         position_size = max(1, int((risk_factor * money) / price_mean))
 
-        if price_mean < stockdata.at[stockdata.index[-1], "MA"] and money_to_spend >= price_mean and stockdata['%K'].iloc[-1] < buy_threshold:
+        if price_mean < stockdata.at[stockdata.index[-1], "MA"] and stockdata['%K'].iloc[-1] < buy_threshold:
             buy_price = price_mean
             n = np.floor(money_to_spend / buy_price)
+            if n == 0:
+                sell_price = np.nan
+                buy_price = np.nan
+
 
 
         elif price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0 and stockdata['%K'].iloc[-1] > sell_threshold:
@@ -177,10 +183,8 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
 #Strategy 4 uses Exponential Moving Average (EMA) to calculate buy and sell prizes
 def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence,time_factor,influencibility_index):
-    total_buy_price = 0
     offer = {}
     new_opinion = {}
-    significance_scores = {}
     for stock, index in zip(list_stocks, range(len(list_stocks))):
         #Initialize values
         stock_count = security_register.at[jid, stock]
@@ -206,13 +210,19 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         signal_line = macd_line.ewm(span=signal_line_period, adjust=False).mean()
         position_size = max(1, int((money) / price_mean))
         risk_adjustment = risk_factor * 0.02
+        buy_threshold = 0 + risk_adjustment
+        sell_threshold = 0 - risk_adjustment
 
 
-        if macd_line.iloc[-1] > signal_line.iloc[-1] and money >= stockdata.at[stockdata.index[-1], 'Close']*(1 - risk_adjustment):
+        if macd_line.iloc[-1] > signal_line.iloc[-1]+buy_threshold:
             buy_price = price_mean
             n = np.floor(money_to_spend / buy_price)
+            if n == 0:
+                sell_price = np.nan
+                buy_price = np.nan
 
-        elif macd_line.iloc[-1] < signal_line.iloc[-1] and stock_count > 0:
+
+        elif macd_line.iloc[-1] < signal_line.iloc[-1]+sell_threshold and stock_count > 0:
             sell_price = (price_mean + price_high) / 2
             n = stock_count
 
