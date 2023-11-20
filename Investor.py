@@ -28,7 +28,6 @@ class Investor(Agent):
         # create and normalize opinions
         self.opinions = pd.DataFrame({stock: np.random.rand() for stock in self.stock_list}, index=[0])
         self.opinions = self.opinions.div(self.opinions.sum(axis=1),axis=0)
-        print(self.opinions)
         # here we define lists to keep track of the networth of every investor
         self.networth_list = []
         self.asset_networth_list = []

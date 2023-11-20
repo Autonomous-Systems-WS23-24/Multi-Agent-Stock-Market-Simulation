@@ -58,13 +58,11 @@ class Environment():
         buyer = transaction["buyer"].iloc[0]
         seller = transaction["seller"].iloc[0]
 
-
         self.security_register.at[buyer, stock]  += 1
         self.security_register.at[seller, stock] -= 1
 
         #Update orderbook
         self.transaction_list_one_day[stock] = pd.concat([self.transaction_list_one_day[stock], transaction], ignore_index=True)
-        #print(self.transaction_list_one_day)
         indice_to_remove_sell = self.orderbook_sell_offers[stock][self.orderbook_sell_offers[stock]['name'].str.contains(seller_name)].head(1).index
         indice_to_remove_buy = self.orderbook_buy_offers[stock][self.orderbook_buy_offers[stock]['name'].str.contains(buyer_name)].head(1).index
         self.orderbook_buy_offers[stock].drop(indice_to_remove_buy, inplace=True)
@@ -85,7 +83,7 @@ class Environment():
                 print(f'Today transactions happened for {stock}')
 
             else:
-                print(f"No Transactions today for stock {stock}! Creating artificial data!")
+                #print(f"No Transactions today for stock {stock}! Creating artificial data!")
                 mean = (self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "Low"] + self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "High"]) / 2
                 var = self.stock_candles[stock]['Close'].rolling(10).std().mean()
                 random_price_data = np.random.normal(mean, var, 20)
@@ -94,7 +92,6 @@ class Environment():
                 low = min(random_price_data)
                 high = max(random_price_data)
                 new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
-                #print(new_data)
                 self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
                 self.transaction_list_one_day[stock].reset_index()
 
@@ -106,7 +103,6 @@ class Environment():
         for jid in self.list_investors:
             self.stock_reputation += self.stock_opinions[jid]
         self.stock_reputation = self.stock_reputation/np.sum(self.stock_reputation)
-        print(self.stock_reputation)
         self.stock_reputation_history.append(self.stock_reputation.tolist())
 
     def data_visualization(self):
