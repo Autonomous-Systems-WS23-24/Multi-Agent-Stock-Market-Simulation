@@ -10,7 +10,7 @@ import os
 
 async def main(stock_list):
     num_investors = 20
-    num_iterations = 100
+    num_iterations = 10
     list_investors = [f"investor{i}"for i in range(1,num_investors+1)]
     data = {
         'Investor': list_investors,

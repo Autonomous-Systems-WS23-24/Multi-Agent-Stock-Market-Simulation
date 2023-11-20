@@ -121,6 +121,8 @@ class Broker(Agent):
                 plt.legend()
                 plt.show()
 
+            self.agent.environment.data_visualization()
+
     async def setup(self):
         # Add the behavior to the agent
         template = Template()
