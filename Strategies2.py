@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 
 
-def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence):
+#Stategy 1 is a short-term strategy using RSI for calculating buy and sell prizes
+def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence, time_factor):
     total_buy_price = 0
     offer = {}
     new_opinion = {}
@@ -21,17 +22,18 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         price_high = stockdata.at[stockdata.index[-1], "High"]
         price_mean = (price_low + price_high) / 2
 
-        # calculate interesting cues:
+        # calculate RSI
         # RSI, The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
         # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
-        stockdata["RSI"] = tl.RSI(stockdata['Close'], timeperiod=14)
+        time_period = int(time_factor * 100) #days
+        stockdata["RSI"] = tl.RSI(stockdata['Close'], timeperiod=time_period)
         rsi_mean = stockdata["RSI"].mean()
         rsi_std = stockdata["RSI"].std()
         RSI_buy_threshold = rsi_mean - 0.01 * rsi_std
         RSI_sell_threshold = rsi_mean + 0.01 * rsi_std
 
-        # moving average of last 52 days
-        stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=52, matype=0)
+        #moving average
+        stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=time_period, matype=0)
 
         # A part where we look at popularity and future prospect of a stock
         opinions = []
@@ -39,14 +41,14 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
         # conditions for creating buy and sell offers
         if (stockdata.at[stockdata.index[-1], "RSI"] < RSI_buy_threshold
-                or price_mean <= stockdata.at[stockdata.index[-1], "MA"]) and money > price_mean:
+                and price_mean <= stockdata.at[stockdata.index[-1], "MA"]) and money > price_mean:
 
             if money > n * price_high:
                 buy_price = price_mean * 0.97
                 total_buy_price += (n * buy_price)
                 money -= buy_price * n
         elif (stockdata.at[stockdata.index[-1], "RSI"] > RSI_sell_threshold
-              or price_low >= stockdata.at[stockdata.index[-1], "MA"]) and stock_count > 0:
+              and price_low >= stockdata.at[stockdata.index[-1], "MA"]) and stock_count > 0:
             sell_price = (price_mean + price_high) / 2
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
@@ -59,7 +61,8 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
     return offer, new_opinions
 
 
-def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence):
+#Strategy 2 uses Bollinger bands for calculating buy and sell prices
+def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence, time_factor):
     offer = {}
     total_buy_price = 0
     new_opinion = {}
@@ -77,7 +80,7 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         price_mean = (price_low + price_high) / 2
 
         # Calculate Bollinger Bands
-        bb_period = 20
+        bb_period = int(100 * time_factor) # days
         num_std_dev = 2
         stockdata['RollingMean'] = stockdata['Close'].rolling(bb_period).mean()
         stockdata['RollingStd'] = stockdata['Close'].rolling(bb_period).std()
@@ -104,30 +107,34 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
     return offer, new_opinions
 
 
-def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence):
+#Strategy 3 uses the stochastic oscillator and moving average of the last 52 days
+def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence,time_factor):
     total_buy_price = 0
     offer = {}
     new_opinion = {}
     significance_scores = {}
     for stock in list_stocks:
+        # initialize values
         stock_count = security_register.at[jid, stock]
         stockdata = stockdata_dict[stock]
         n = 1
+        buy_price = np.nan
+        sell_price = np.nan
+
+        #Calculate current prices
         price_low = stockdata.at[stockdata.index[-1], "Low"]
         price_high = stockdata.at[stockdata.index[-1], "High"]
         price_mean = (price_low + price_high) / 2
 
-        k_period = 14
-        d_period = 3
+        k_period, d_period = int(50 * time_factor), int(10 * time_factor) #days
         stockdata['%K'] = 100 * ((stockdata['Close'] - stockdata['Low'].rolling(window=k_period).min()) /
                                  (stockdata['High'].rolling(window=k_period).max() - stockdata['Low'].rolling(window=k_period).min()))
         stockdata['%D'] = stockdata['%K'].rolling(window=d_period).mean()
 
-        # moving average of last 25 days
-        sma_period = 25
-        stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=sma_period, matype=0)
-        buy_price = np.nan
-        sell_price = np.nan
+        # moving average
+        time_period = int(50 * time_factor)
+        stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=time_period, matype=0)
+
 
         position_size = max(1, int((risk_factor * money) / price_mean))
         confidence = -risk_factor if risk_factor < 0.03 else risk_factor
@@ -158,33 +165,34 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
     return offer, new_opinions
 
 
-def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence):
+#Strategy 4 uses Exponential Moving Average (EMA) to calculate buy and sell prizes
+def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence,time_factor):
     total_buy_price = 0
     offer = {}
     new_opinion = {}
     significance_scores = {}
     for stock in list_stocks:
+        #Initialize values
         stock_count = security_register.at[jid, stock]
         stockdata = stockdata_dict[stock]
         n = 1
-        short_term_period = 12
-        long_term_period = 26
+        buy_price = np.nan
+        sell_price = np.nan
+
+        #Calculate currents prizes
         price_low = stockdata.at[stockdata.index[-1], "Low"]
         price_high = stockdata.at[stockdata.index[-1], "High"]
         price_mean = (price_low + price_high) / 2
 
+        #Calculating Exponential Moving Average (EMA)
+        short_term_period, long_term_period = int(26 * time_factor), int(50 * time_factor) #days
         short_term_ema = stockdata['Close'].ewm(span=short_term_period, adjust=False).mean()
         long_term_ema = stockdata['Close'].ewm(span=long_term_period, adjust=False).mean()
-
         macd_line = short_term_ema - long_term_ema
-
-        signal_line_period = 9
+        signal_line_period = 9 #stays constant
         signal_line = macd_line.ewm(span=signal_line_period, adjust=False).mean()
-
-        buy_price = np.nan
-        sell_price = np.nan
-
         position_size = max(1, int((money) / price_mean))
+
 
         if macd_line.iloc[-1] > signal_line.iloc[-1] and money >= stockdata.at[stockdata.index[-1], 'Close']:
             buy_price = price_mean

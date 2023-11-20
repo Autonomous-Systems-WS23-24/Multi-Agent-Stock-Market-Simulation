@@ -30,7 +30,7 @@ class Environment():
         self.stock_reputation_history = []
 
         for stock in self.list_stocks:
-            self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[500:560]
+            self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[460:560]
             self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
             self.orderbook_buy_offers[stock] = pd.DataFrame(columns=["name", "buy"])
             self.transaction_list_one_day[stock] = pd.DataFrame(columns=["buyer", "seller","price"])
