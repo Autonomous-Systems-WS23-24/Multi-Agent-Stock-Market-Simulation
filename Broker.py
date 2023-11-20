@@ -78,6 +78,8 @@ class Broker(Agent):
 
 
         async def match_transactions(self):
+            # Create new stock candles from Transactions
+            self.agent.environment.create_candles()
             for stock in self.agent.environment.stock_list:
                 df_buy = self.agent.environment.orderbook_buy_offers[stock]
                 df_sell = self.agent.environment.orderbook_sell_offers[stock]
@@ -96,8 +98,6 @@ class Broker(Agent):
 
                         self.agent.environment.do_transaction(stock, price, buyer_name, seller_name)
 
-            # Create new stock candles from Transactions
-            self.agent.environment.create_candles()
             # Update the reputation  of the stock
             self.agent.environment.get_stock_reputation()
 
