@@ -16,7 +16,7 @@ import json
 
 class Investor(Agent):
 
-    def __init__(self,jid,password,environment,strategy,money,risk_factor,stock_list,num_iterations=1000):
+    def __init__(self,jid,password,environment,strategy,money,risk_factor,social_weight,stock_list,num_iterations=1000):
         super().__init__(jid, password)
         self.environment = environment # environment
         self.stock_list = stock_list #list of all stocks
@@ -25,12 +25,15 @@ class Investor(Agent):
         self.social_influence = pd.DataFrame({stock: 0 for stock in self.stock_list},index=[0])
         self.risk_factor = risk_factor
         self.money = money
-        self.social_weight = 1
+        self.social_weight = social_weight
+        # create and normalize opinions
+        self.opinions = pd.DataFrame({stock: np.random.rand() for stock in self.stock_list}, index=[0])
+        self.opinions = self.opinions.div(self.opinions.sum(axis=1),axis=0)
+        print(self.opinions)
         # here we define lists to keep track of the networth of every investor
         self.networth_list = []
         self.asset_networth_list = []
         self.money_list = []
-        self.opinions = pd.DataFrame({stock: np.random.rand() for stock in self.stock_list},index=[0])
         self.num_iterations = num_iterations
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
@@ -106,9 +109,6 @@ class Investor(Agent):
 
         async def socialize(self):
             self.agent.environment.push_opinions(self.agent.jid[0],self.agent.opinions,self.agent.social_weight)
-
-
-
 
     async def setup(self):
         print(f"{self.jid} started . . .")

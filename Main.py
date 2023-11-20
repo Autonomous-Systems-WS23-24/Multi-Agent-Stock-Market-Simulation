@@ -21,10 +21,9 @@ async def main(stock_list):
     print(ownership_frame)
     risk_factors = np.arange(0,1.1,0.05)
     money_list = [i for i in range(len(stock_list))]
-    stock_ownership_list = []
-    environment = Environment.Environment(stock_list, ownership_frame, list_investors)
+    environment = Environment.Environment(stock_list, ownership_frame,list_investors)
     Agent_Broker = Broker.Broker("broker@localhost", "1234",environment,num_investors,stock_list,num_iterations=num_iterations)
-    investors = [Investor.Investor(f"investor{i}@localhost", "1234",environment,(i%4)+1,(i%5)*1000,risk_factors[i],stock_list,num_iterations=num_iterations) for i in range(1, num_investors + 1)]
+    investors = [Investor.Investor(f"investor{i}@localhost", "1234",environment,(i%4)+1,(i%5)*1000,risk_factors[i],1,stock_list,num_iterations=num_iterations) for i in range(1, num_investors + 1)]
     tasks = []
     await Agent_Broker.start()
     for investor in investors:
