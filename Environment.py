@@ -99,9 +99,9 @@ class Environment():
         self.stock_opinions[jid] = opinion*weight
 
     def get_stock_reputation(self):
-        self.stock_reputation = pd.DataFrame({stock: 0 for stock in self.stock_list}, index=[0])
+        self.stock_reputation = np.zeros(len(self.stock_list))
         for jid in self.list_investors:
-            self.stock_reputation.add(self.stock_opinions[jid])
+            self.stock_reputation += self.stock_opinions[jid]
         self.stock_reputation = self.stock_reputation/np.sum(self.stock_reputation)
         print(self.stock_reputation)
         self.stock_reputation_history.append(self.stock_reputation.tolist())
