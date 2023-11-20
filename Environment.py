@@ -22,6 +22,9 @@ class Environment():
         self.security_register = ownership_frame
         self.stock_candles = {}
         self.stock_opinions = {}
+        for investor in list_investors:
+            self.stock_opinions[investor]= pd.DataFrame({stock: np.random.rand() for stock in self.stock_list}, index=[0])
+            self.stock_opinions[investor] = self.stock_opinions[investor].div(self.stock_opinions[investor].sum(axis=1), axis=0)
         self.stock_reputation = pd.DataFrame({stock: np.random.rand() for stock in self.stock_list}, index=[0])
         self.stock_reputation = self.stock_reputation.div(self.stock_reputation.sum(axis=1), axis=0)
         self.orderbook_sell_offers = {}

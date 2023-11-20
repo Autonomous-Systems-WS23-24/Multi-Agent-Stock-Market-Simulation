@@ -98,9 +98,8 @@ class Broker(Agent):
             # Create new stock candles from Transactions
             self.agent.environment.create_candles()
             # Update the reputation  of the stock
-            try:
-                self.agent.environment.get_stock_reputation()
-            except: print("orderbook was too slow this time! hopefully next time!")
+            self.agent.environment.get_stock_reputation()
+
 
             for stock in self.agent.environment.stock_list:
                 # Remove old offers that have not been matched
