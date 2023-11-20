@@ -16,11 +16,12 @@ import json
 
 class Investor(Agent):
 
-    def __init__(self,jid,password,environment,strategy,money,risk_factor,social_weight,stock_list,time_factor, num_iterations=1000):
+    def __init__(self,jid,password,environment,strategy,money,risk_factor,social_weight,stock_list,time_factor,influencibility_index, num_iterations=1000):
         super().__init__(jid, password)
         self.environment = environment # environment
         self.stock_list = stock_list #list of all stocks
         # these are the basic attributes of an investor
+        self.influencibility_index = influencibility_index
         self.time_factor = round(time_factor,2)
         self.strategy = strategy
         self.social_influence = pd.DataFrame({stock: 0 for stock in self.stock_list},index=[0])
@@ -90,7 +91,7 @@ class Investor(Agent):
             strategy = f'strategy{self.agent.strategy}'
             strategy_func = getattr(Strategies2, strategy, None)
             orders, new_opinion = strategy_func(self.agent.jid[0], self.agent.environment.stock_candles, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
-                          self.agent.environment.security_register, self.agent.opinions, self.agent.social_influence, self.agent.time_factor)
+                          self.agent.environment.security_register, self.agent.opinions, self.agent.social_influence, self.agent.time_factor, self.agent.influencibility_index)
             self.agent.opinions = new_opinion
             return orders
 

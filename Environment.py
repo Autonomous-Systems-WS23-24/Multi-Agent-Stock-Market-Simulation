@@ -22,7 +22,7 @@ class Environment():
         self.security_register = ownership_frame
         self.stock_candles = {}
         self.stock_opinions = {}
-        self.stock_reputation = np.zeros(len(list_stocks))
+        self.stock_reputation = np.ones(len(list_stocks))/(len(list_stocks))
         self.orderbook_sell_offers = {}
         self.orderbook_buy_offers = {}
         self.transaction_list_one_day = {}

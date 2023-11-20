@@ -16,12 +16,12 @@ import json
 
 class Investor(Agent):
 
-    def __init__(self,jid,password,environment,strategy,money,risk_factor,social_weight,time_factor,stock_list,num_iterations=1000):
+    def __init__(self,jid,password,environment,strategy,money,risk_factor,social_weight,stock_list,time_factor, num_iterations=1000):
         super().__init__(jid, password)
         self.environment = environment # environment
         self.stock_list = stock_list #list of all stocks
         # these are the basic attributes of an investor
-        self.time_factor = time_factor
+        self.time_factor = round(time_factor,2)
         self.strategy = strategy
         self.social_influence = pd.DataFrame({stock: 0 for stock in self.stock_list},index=[0])
         self.risk_factor = risk_factor
@@ -35,6 +35,9 @@ class Investor(Agent):
         self.networth_list = []
         self.asset_networth_list = []
         self.money_list = []
+        self.asset_value_lists = {}
+        for stock in self.stock_list:
+            self.asset_value_lists[stock]=[]
         self.num_iterations = num_iterations
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
@@ -55,14 +58,20 @@ class Investor(Agent):
         async def on_end(self):
             x = np.arange(0,len(self.agent.networth_list))
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))  # 1 row, 2 columns
+            y = []
+            for stock in self.agent.stock_list:
+                y.append(self.agent.asset_value_lists[stock])
+            y.append(self.agent.money_list)
             # total networth
-            ax1.plot(x,self.agent.networth_list,label= f"Networth of {self.agent.jid[0]}")
+            ax1.plot(x,self.agent.networth_list,label= f"{self.agent.jid[0]} uses strategy {self.agent.strategy} with time factor {self.agent.time_factor}")
             ax1.set_title('networth total')
             ax1.set_xlabel('days')
             ax1.set_ylabel('networth')
             ax1.legend()
-            # networth distribution
-            ax2.stackplot(x,self.agent.money_list,self.agent.asset_networth_list, labels= ["money","stock assets"])
+            #networth distribution
+            labels = [stock for stock in self.agent.stock_list]
+            labels += ['money']
+            ax2.stackplot(x,*y, labels= labels)
             ax2.set_title('networth distribution')
             ax2.set_xlabel('days')
             ax2.legend()
@@ -88,7 +97,7 @@ class Investor(Agent):
         async def ownership_update(self):
             conf = await self.receive(timeout=10)
             if conf:
-                assets_values = 0
+                assets_values_total = 0
                 for stock in self.agent.stock_list:
                     daily_transactions_stock = self.agent.environment.transaction_list_one_day[stock]
                     buys = daily_transactions_stock['buyer'].str.contains(str(self.agent.jid[0]))
@@ -101,11 +110,11 @@ class Investor(Agent):
                     stock_low = self.agent.environment.stock_candles[stock].at[self.agent.environment.stock_candles[stock].index[-1],"Low"]
                     stock_value = (stock_low+stock_high)/2
 
-                    assets_values += stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock]
-
-                self.agent.asset_networth_list.append(assets_values)
+                    assets_values_total += stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock]
+                    self.agent.asset_value_lists[stock].append(stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock])
+                self.agent.asset_networth_list.append(assets_values_total)
                 self.agent.money_list.append(self.agent.money)
-                self.agent.networth_list.append(self.agent.money+assets_values)
+                self.agent.networth_list.append(self.agent.money+assets_values_total)
 
 
         async def socialize(self):

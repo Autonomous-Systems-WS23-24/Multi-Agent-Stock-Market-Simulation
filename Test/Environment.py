@@ -12,19 +12,23 @@ import json
 import warnings
 import random as rd
 import talib as tl
+import plotly.graph_objects as go
 
 
 class Environment():
     def __init__(self, list_stocks,ownership_frame,list_investors):
         self.list_investors = list_investors
         self.list_stocks = list_stocks
+        self.security_register = ownership_frame
         self.stock_candles = {}
         self.stock_opinions = {}
         self.stock_reputation = np.zeros(len(list_stocks))
         self.orderbook_sell_offers = {}
         self.orderbook_buy_offers = {}
         self.transaction_list_one_day = {}
-        self.security_register = ownership_frame
+        #this part is for keeping track of statistics#####################
+        self.stock_reputation_history = []
+
         for stock in self.list_stocks:
             self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[460:560]
             self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
@@ -99,6 +103,24 @@ class Environment():
             self.stock_reputation += self.stock_opinions[jid]
         self.stock_reputation = self.stock_reputation/np.sum(self.stock_reputation)
         print(self.stock_reputation)
+        self.stock_reputation_history.append(self.stock_reputation.tolist())
+
+    def data_visualization(self):
+        x = np.arange(0,len(self.stock_reputation_history))
+        y = list(map(list, zip(*self.stock_reputation_history)))
+        plt.stackplot(x, y, labels=self.list_stocks)
+        plt.legend()
+        plt.show()
+
+        for stock in self.list_stocks:
+            df = self.stock_candles[stock]
+            fig = go.Figure(data=[go.Candlestick(x=df['Date'],
+                                                 open=df['Open'],
+                                                 high=df['High'],
+                                                 low=df['Low'],
+                                                 close=df['Close'])])
+
+            fig.show()
 
 
 

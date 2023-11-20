@@ -10,6 +10,7 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
     new_opinion = {}
     significance_scores = {}
     for stock in list_stocks:
+        #opinion_stock = opinions[stock].at[0]
         # initialize values
         stock_count = security_register.at[jid, stock]
         stockdata = stockdata_dict[stock]
