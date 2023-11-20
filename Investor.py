@@ -72,6 +72,21 @@ class Investor(Agent):
             ax2.legend()
             plt.tight_layout()
             plt.show()
+            relative_change = [(day - self.agent.networth_list[0]) / self.agent.networth_list[0] for day in
+                               self.agent.networth_list]
+            plt.plot(x, relative_change, label=f'Relative Change in Networth {self.agent.jid[0]}')
+            # Add labels and title
+            plt.xlabel('Days')
+            plt.ylabel('Relative Change')
+            # Show legend
+            plt.legend()
+            plt.legend()
+            plt.plot(x, relative_change, label=f'Relative Change in Networth {self.agent.jid[0]}')
+            plt.axhline(0, color='red', linestyle='--', label='y=0')
+            # Add labels and title
+            plt.xlabel('Days')
+            plt.ylabel('Relative Change')
+            plt.show()
 
         async def send_orders(self):
             orders = self.execute_strategy()
