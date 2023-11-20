@@ -20,6 +20,7 @@ class Broker(Agent):
         self.num_investors = num_investors
         self.num_iterations = num_iterations
         self.environment = environment
+        self.investor_list = [f"investor{i}" for i in range(1, self.num_investors + 1)]
 
     class BrokerBehaviour(CyclicBehaviour):
         async def on_start(self):
@@ -27,7 +28,6 @@ class Broker(Agent):
             self.count = 0
 
         async def run(self):
-            self.investor_list = [f"investor{i}" for i in range(1, self.agent.num_investors + 1)]
             await self.receive_offers()
             await self.match_transactions()
             # end condition
@@ -36,12 +36,10 @@ class Broker(Agent):
                 self.kill()
 
         async def receive_offers(self):
-            for i in range(len(self.investor_list)):
+            for i in range(len(self.agent.investor_list)):
                 offers = await self.receive(timeout=10)  # wait for a message for 10 seconds
 
                 if offers:
-                    #print(offers.body)
-                    #print(f"Offers from Agent {offers.sender} received!")
                     received_data = json.loads(offers.body)  # Assuming received_message is the message you received
                     order_data = {stock: order for stock, order in received_data.items()}
                     #print(received_data)
@@ -50,6 +48,7 @@ class Broker(Agent):
                         warnings.filterwarnings("ignore", category=FutureWarning)
 
                         for stock, order in order_data.items():
+
                             df_offer = pd.read_json(order, orient='records')
                             #print(df_offer)
 
@@ -71,43 +70,37 @@ class Broker(Agent):
                 else:
                     print("Broker did not receive any offers after 10 seconds")
                     continue
-            self.agent.environment.create_candles()
 
 
         async def match_transactions(self):
-            processed_stock= 0
             for stock in self.agent.environment.list_stocks:
                 df_buy = self.agent.environment.orderbook_buy_offers[stock]
                 df_sell = self.agent.environment.orderbook_sell_offers[stock]
                 df_buy_sorted = df_buy.sort_values(by="buy", ascending=False).reset_index(drop=True)
                 df_sell_sorted = df_sell.sort_values(by="sell").reset_index(drop=True)
 
-                matched_buyers = set()
-                matched_sellers = set()
 
                 for index in range(min(len(df_buy_sorted.index),len(df_sell_sorted))):
                     buyer_name = df_buy_sorted["name"][index]
                     seller_name = df_sell_sorted["name"][index]
+                    # Double check if seller has the stock
+                    if df_buy_sorted["buy"][index] >= df_sell_sorted["sell"][index] and self.agent.environment.security_register.at[seller_name, stock] >= 1:
 
-                    if buyer_name == seller_name:
-                        continue  # Skip matching the buyer and seller with the same name
+                        #transaction = {"buyer": buyer_name, "seller": seller_name, "price": price}
+                        price = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index]) / 2, 2)
 
-                    #transaction = {"buyer": buyer_name, "seller": seller_name, "price": price}
-                    price = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index]) / 2, 2)
-
-                    #Double check if seller has the stock
-                    if self.agent.environment.security_register.at[seller_name, stock] >= 1:
                         self.agent.environment.do_transaction(stock, price, buyer_name, seller_name)
 
-                    matched_buyers.add(buyer_name)
-                    matched_sellers.add(seller_name)
+            # Create new stock candles from Transactions
+            self.agent.environment.create_candles()
+            # Update the reputation  of the stock
+            self.agent.environment.get_stock_reputation()
 
+            for stock in self.agent.environment.list_stocks:
+                # Remove old offers that have not been matched
+                self.agent.environment.orderbook_buy_offers[stock].drop(self.agent.environment.orderbook_buy_offers[stock].index, inplace=True)
+                self.agent.environment.orderbook_sell_offers[stock].drop(self.agent.environment.orderbook_sell_offers[stock].index, inplace=True)
 
-
-                    # Convert the list of dictionaries into a DataFrame
-                    #print(f"{self.agent.environment.security_register.at[seller_name, stock]}, {seller_name}, {stock}")
-                    print(self.agent.environment.security_register)
-                    #print(self.agent.environment.transaction_list_one_day)
 
             for investor in range(1, self.agent.num_investors + 1):
                 msg = Message(to="investor{}@localhost".format(investor))  # Instantiate the message
@@ -117,7 +110,7 @@ class Broker(Agent):
 
         async def on_end(self):
             print('Broker finished iterations')
-            print(self.agent.environment.security_register)
+            #print(self.agent.environment.security_register)
             for stock in self.agent.stock_list:
                 x = np.arange(0, len(self.agent.environment.stock_candles[stock]["Close"].to_list()))
                 y = self.agent.environment.stock_candles[stock]["Close"].to_list()

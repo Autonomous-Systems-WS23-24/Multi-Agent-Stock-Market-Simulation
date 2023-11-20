@@ -15,15 +15,18 @@ import talib as tl
 
 
 class Environment():
-    def __init__(self, list_stocks,ownership_frame):
+    def __init__(self, list_stocks,ownership_frame,list_investors):
+        self.list_investors = list_investors
         self.list_stocks = list_stocks
         self.stock_candles = {}
+        self.stock_opinions = {}
+        self.stock_reputation = np.zeros(len(list_stocks))
         self.orderbook_sell_offers = {}
         self.orderbook_buy_offers = {}
         self.transaction_list_one_day = {}
         self.security_register = ownership_frame
         for stock in self.list_stocks:
-            self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[500:560]
+            self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[460:560]
             self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
             self.orderbook_buy_offers[stock] = pd.DataFrame(columns=["name", "buy"])
             self.transaction_list_one_day[stock] = pd.DataFrame(columns=["buyer", "seller","price"])
@@ -63,18 +66,18 @@ class Environment():
 
     def create_candles(self):
         for stock in self.list_stocks:
-            if len(self.transaction_list_one_day[stock].index)>3:
+            if len(self.transaction_list_one_day[stock].index)>0:
                 open = self.transaction_list_one_day[stock]["price"].iloc[-1]
                 close = self.transaction_list_one_day[stock]["price"].iloc[-1]
                 high = self.transaction_list_one_day[stock]["price"].max()
                 low = self.transaction_list_one_day[stock]["price"].min()
                 new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
                 self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
-                self.transaction_list_one_day[stock].reset_index()
-                #print(f'Today {self.transaction_list_one_day[stock]} for {stock}')
+                self.transaction_list_one_day[stock].drop(self.transaction_list_one_day[stock].index, inplace=True)
+                print(f'Today transactions happened for {stock}')
 
             else:
-                print(f"No Transactions tody for stock {stock}! Creating artificial data!")
+                print(f"No Transactions today for stock {stock}! Creating artificial data!")
                 mean = (self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "Low"] + self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "High"]) / 2
                 var = self.stock_candles[stock]['Close'].rolling(10).std().mean()
                 random_price_data = np.random.normal(mean, var, 20)
@@ -85,6 +88,21 @@ class Environment():
                 new_data = pd.DataFrame({"Close": close, "Open": open, "High": high, "Low": low}, index=[0])
                 #print(new_data)
                 self.stock_candles[stock] = pd.concat([self.stock_candles[stock], new_data], ignore_index=True)
+                self.transaction_list_one_day[stock].reset_index()
+
+    def push_opinions(self,jid,opinion,weight):
+        self.stock_opinions[jid] = opinion*weight
+
+    def get_stock_reputation(self):
+        self.stock_reputation = np.zeros(len(self.list_stocks))
+        for jid in self.list_investors:
+            self.stock_reputation += self.stock_opinions[jid]
+        self.stock_reputation = self.stock_reputation/np.sum(self.stock_reputation)
+        print(self.stock_reputation)
+
+
+
+
 
 
 
