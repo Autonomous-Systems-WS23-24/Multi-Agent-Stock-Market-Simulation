@@ -1,3 +1,5 @@
+import asyncio
+
 import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
@@ -26,6 +28,8 @@ class Broker(Agent):
         async def on_start(self):
             print(f"Starting Broker. . .")
             self.count = 0
+            # to giuve the investors time to start
+            await asyncio.sleep(1)
 
         async def run(self):
             await self.receive_offers()
