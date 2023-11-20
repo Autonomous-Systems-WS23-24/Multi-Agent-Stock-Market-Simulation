@@ -72,7 +72,7 @@ class Environment():
                 print(f'Today transactions happened for {stock}')
 
             else:
-                print(f"No Transactions today for stock {stock}! Creating artificial data!")
+                #print(f"No Transactions today for stock {stock}! Creating artificial data!")
                 mean = (self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "Low"] + self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "High"]) / 2
                 var = self.stock_candles[stock]['Close'].rolling(10).std().mean()
                 random_price_data = np.random.normal(mean, var, 20)
@@ -109,7 +109,7 @@ class Environment():
                                                  low=df['Low'],
                                                  close=df['Close'])])
 
-            fig.show()
+            #fig.show()
 
 
 
