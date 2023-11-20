@@ -29,13 +29,14 @@ class Broker(Agent):
             print(f"Starting Broker. . .")
             self.count = 0
             # to giuve the investors time to start
-            await asyncio.sleep(1)
+
 
         async def run(self):
             await self.receive_offers()
             await self.match_transactions()
             # end condition
             self.count += 1
+            print(f'Currenly on day {self.count}!')
             if self.count == self.agent.num_iterations:
                 self.kill()
 
