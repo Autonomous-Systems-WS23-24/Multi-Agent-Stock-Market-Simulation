@@ -6,67 +6,63 @@ import pandas as pd
 def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence):
     total_buy_price = 0
     offer = {}
+    new_opinion = {}
     significance_scores = {}
     for stock in list_stocks:
-    #initialize values
+        # initialize values
         stock_count = security_register.at[jid, stock]
         stockdata = stockdata_dict[stock]
-        n=1
+        n = 1
         sell_price = np.nan
         buy_price = np.nan
 
-    #calculate current prices
+        # calculate current prices
         price_low = stockdata.at[stockdata.index[-1], "Low"]
         price_high = stockdata.at[stockdata.index[-1], "High"]
         price_mean = (price_low + price_high) / 2
 
-    #calulate interesting cues:
-        #RSI, The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements. It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
-        stockdata["RSI"] = tl.RSI(stockdata['Close'], timeperiod=14) # The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.  # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
+        # calculate interesting cues:
+        # RSI, The Relative Strength Index is a momentum oscillator that measures the speed and change of price movements.
+        # It ranges from 0 to 100 and is typically used to identify overbought or oversold conditions
+        stockdata["RSI"] = tl.RSI(stockdata['Close'], timeperiod=14)
         rsi_mean = stockdata["RSI"].mean()
         rsi_std = stockdata["RSI"].std()
         RSI_buy_threshold = rsi_mean - 0.01 * rsi_std
         RSI_sell_threshold = rsi_mean + 0.01 * rsi_std
 
-        #moving average of last 52 days
+        # moving average of last 52 days
         stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=52, matype=0)
 
-
-        #A part where we look at popularity and future prospect of a stock
+        # A part where we look at popularity and future prospect of a stock
         opinions = []
         social_influence = []
 
+        # conditions for creating buy and sell offers
+        if (stockdata.at[stockdata.index[-1], "RSI"] < RSI_buy_threshold
+                or price_mean <= stockdata.at[stockdata.index[-1], "MA"]) and money > price_mean:
 
-    #conditions for creating buy and sell offers
-        if (stockdata.at[stockdata.index[-1],"RSI"] < RSI_buy_threshold
-                or price_mean <= stockdata.at[stockdata.index[-1],"MA"]) and money> price_mean:
-
-            if money > n*price_high:
+            if money > n * price_high:
                 buy_price = price_mean * 0.97
                 total_buy_price += (n * buy_price)
-                money-= buy_price*n
-        elif (stockdata.at[stockdata.index[-1],"RSI"] > RSI_sell_threshold
-                or price_low >= stockdata.at[stockdata.index[-1],"MA"]) and stock_count>0:
-            sell_price = (price_mean +price_high)/2
-            #print(f'Investor wants to sell for {sell_price} and buy for {buy_price}')
-        offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n },index=[0])
+                money -= buy_price * n
+        elif (stockdata.at[stockdata.index[-1], "RSI"] > RSI_sell_threshold
+              or price_low >= stockdata.at[stockdata.index[-1], "MA"]) and stock_count > 0:
+            sell_price = (price_mean + price_high) / 2
 
+        offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
 
-    #Also we need a way of choosing of which order we want to execute
-    #new_offer = modifyoffer(opininos,social_influence)    we here put a linear transform on the offers dependent on personal beliefs and social influences
-    #expected_return = (future_price_estimate - buy_price) / buy_price
-    #preference = expected_return - risk_factor
-   # for stock in list_stocks:
-    #    n = offer[stock]["quantity"].iloc[0]
-     #   # Check if total_buy_price is not zero to avoid division by zero
-      #  if total_buy_price != 0:
-       #     offer[stock]["quantity"].iloc[0] = np.floor(n * money / total_buy_price)
+        new_opinion[stock] = stockdata["RSI"].mean()
 
-    return offer
+    new_opinions = pd.DataFrame(new_opinion, index=[0])
+    new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
+
+    return offer, new_opinions
+
 
 def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence):
     offer = {}
     total_buy_price = 0
+    new_opinion = {}
     for stock in list_stocks:
         # Initialize values
         stock_count = security_register.at[jid, stock]
@@ -94,23 +90,24 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
             if money > 5 * buy_price:
                 n = 5  # Adjust quantity based on available funds
             total_buy_price += (n * buy_price)
-            money-= n*buy_price
+            money -= n * buy_price
         elif price_mean > stockdata.at[stockdata.index[-1], 'UpperBand'] and stock_count >= n:
             sell_price = price_mean
             n = min(n, stock_count)  # Adjust quantity based on the number of stocks held
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
-   # for stock in list_stocks:
-    #    n = offer[stock]["quantity"].iloc[0]
-        # Check if total_buy_price is not zero to avoid division by zero
-     #   if total_buy_price != 0:
-      #      offer[stock]["quantity"].iloc[0] = np.floor(n * money / total_buy_price)
+        new_opinion[stock] = stockdata["Close"].mean()
 
-    return offer
+    new_opinions = pd.DataFrame(new_opinion, index=[0])
+    new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
+
+    return offer, new_opinions
+
 
 def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence):
     total_buy_price = 0
     offer = {}
+    new_opinion = {}
     significance_scores = {}
     for stock in list_stocks:
         stock_count = security_register.at[jid, stock]
@@ -136,36 +133,35 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         confidence = -risk_factor if risk_factor < 0.03 else risk_factor
 
         if (
-            price_mean < stockdata.at[stockdata.index[-1], "MA"] and money >= price_mean
-            and stockdata['%K'].iloc[-1] < 20
+                price_mean < stockdata.at[stockdata.index[-1], "MA"] and money >= price_mean
+                and stockdata['%K'].iloc[-1] < 20
         ):
             buy_price = price_mean
             if money > 5 * buy_price:
                 n = min(position_size, 5)
             total_buy_price += buy_price
-            money-= buy_price*n
+            money -= buy_price * n
         elif (
-            price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0
-            and stockdata['%K'].iloc[-1] > 80
+                price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0
+                and stockdata['%K'].iloc[-1] > 80
         ):
             sell_price = price_mean
             if stock_count >= 5:
                 n = min(position_size, stock_count)
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
-        significance_scores[stock] = stockdata['%K'].mean()
-    #for stock in list_stocks:
-     #   n = offer[stock]["quantity"].iloc[0]
-        # Check if total_buy_price is not zero to avoid division by zero
-      #  if total_buy_price != 0:
-       #     offer[stock]["quantity"].iloc[0] = np.floor(n * money / total_buy_price)
+        new_opinion[stock] = stockdata['%K'].mean()
 
-    return offer
+    new_opinions = pd.DataFrame(new_opinion, index=[0])
+    new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
+
+    return offer, new_opinions
 
 
 def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence):
     total_buy_price = 0
     offer = {}
+    new_opinion = {}
     significance_scores = {}
     for stock in list_stocks:
         stock_count = security_register.at[jid, stock]
@@ -194,19 +190,17 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
             buy_price = price_mean
             if money > 5 * buy_price:
                 n = min(position_size, 5)
-            total_buy_price+= buy_price
-            money-= buy_price*n
+            total_buy_price += buy_price
+            money -= buy_price * n
         elif macd_line.iloc[-1] < signal_line.iloc[-1] and stock_count > 0:
-            sell_price = (price_mean + price_high)/2
+            sell_price = (price_mean + price_high) / 2
             if stock_count >= 5:
                 n = stock_count
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
-        significance_scores[stock] = macd_line.mean()
-    #for stock in list_stocks:
-     # n = offer[stock]["quantity"].iloc[0]
-        # Check if total_buy_price is not zero to avoid division by zero
-      #  if total_buy_price != 0:
-       #     offer[stock]["quantity"].iloc[0] = np.floor(n * money / total_buy_price)
+        new_opinion[stock] = macd_line.mean()
 
-    return offer
+    new_opinions = pd.DataFrame(new_opinion, index=[0])
+    new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
+
+    return offer, new_opinions
