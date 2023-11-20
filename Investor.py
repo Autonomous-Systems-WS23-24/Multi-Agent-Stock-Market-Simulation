@@ -57,14 +57,20 @@ class Investor(Agent):
         async def on_end(self):
             x = np.arange(0,len(self.agent.networth_list))
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))  # 1 row, 2 columns
+            y = []
+            for stock in self.agent.stock_list:
+                y.append(self.agent.asset_value_lists[stock])
+            y.append(self.agent.money_list)
             # total networth
             ax1.plot(x,self.agent.networth_list,label= f"Networth of {self.agent.jid[0]}")
             ax1.set_title('networth total')
             ax1.set_xlabel('days')
             ax1.set_ylabel('networth')
             ax1.legend()
-            # networth distribution
-            ax2.stackplot(x,self.agent.money_list,self.agent.asset_networth_list, labels= ["money","stock assets"])
+            #networth distribution
+            labels = [stock for stock in self.agent.stock_list]
+            labels += ['money']
+            ax2.stackplot(x,*y, labels= labels)
             ax2.set_title('networth distribution')
             ax2.set_xlabel('days')
             ax2.legend()
@@ -104,7 +110,7 @@ class Investor(Agent):
                     stock_value = (stock_low+stock_high)/2
 
                     assets_values_total += stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock]
-                    self.agent.asset_value_lists[stock].append(stock_value)
+                    self.agent.asset_value_lists[stock].append(stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock])
                 self.agent.asset_networth_list.append(assets_values_total)
                 self.agent.money_list.append(self.agent.money)
                 self.agent.networth_list.append(self.agent.money+assets_values_total)
