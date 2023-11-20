@@ -98,7 +98,9 @@ class Broker(Agent):
             # Create new stock candles from Transactions
             self.agent.environment.create_candles()
             # Update the reputation  of the stock
-            self.agent.environment.get_stock_reputation()
+            try:
+                self.agent.environment.get_stock_reputation()
+            except: pass
 
             for stock in self.agent.environment.stock_list:
                 # Remove old offers that have not been matched
