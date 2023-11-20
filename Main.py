@@ -9,18 +9,12 @@ import Broker
 import os
 import random
 
-<<<<<<< Updated upstream
 async def main(num_investors,num_iterations):
     # find where the stockdata is, create list
     package_dir = os.path.dirname(os.path.abspath(__file__))
     data_directory = os.path.join(package_dir, 'archive/Stocks')
     stock_list = os.listdir(data_directory)
     # create list of investors
-=======
-async def main(stock_list):
-    num_investors = 1
-    num_iterations = 2
->>>>>>> Stashed changes
     list_investors = [f"investor{i}"for i in range(1,num_investors+1)]
     data = {
         'Investor': list_investors,

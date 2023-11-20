@@ -12,7 +12,6 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
     # social_influence = social_influence.tolist()
     offer = {}
     new_opinion = {}
-    significance_scores = {}
     for stock, index in zip(list_stocks, range(len(list_stocks))):
         # initialize values
         stock_count = security_register.at[jid, stock]
@@ -58,12 +57,10 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
             n = stock_count
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
-<<<<<<< Updated upstream
+
 
         new_opinion[stock] = round(abs(0.5-stockdata.at[stockdata.index[-1], "RSI"]),2)
-=======
-        new_opinion[stock] = stockdata["RSI"].mean()
->>>>>>> Stashed changes
+
 
     new_opinions = pd.DataFrame(new_opinion, index=[0])
     new_opinions = new_opinions.div(new_opinions.sum(axis=1), axis=0)
@@ -152,19 +149,6 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=time_period, matype=0)
         position_size = max(1, int((risk_factor * money) / price_mean))
 
-<<<<<<< Updated upstream
-        if price_mean < stockdata.at[stockdata.index[-1], "MA"] and money >= price_mean and stockdata['%K'].iloc[-1] < 20:
-            buy_price = price_mean
-            if money > 5 * buy_price:
-                n = min(position_size, 5)
-            total_buy_price += buy_price
-            money -= buy_price * n
-        elif price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0 and stockdata['%K'].iloc[-1] > 80:
-            sell_price = price_mean
-            if stock_count >= 5:
-                n = min(position_size, stock_count)
-=======
-
         if price_mean < stockdata.at[stockdata.index[-1], "MA"] and money_to_spend >= price_mean and stockdata['%K'].iloc[-1] < 20:
             buy_price = price_mean
             n = np.floor(money_to_spend / buy_price)
@@ -173,8 +157,6 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         elif price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0 and stockdata['%K'].iloc[-1] > 80:
             sell_price = (price_mean + price_high) / 2
             n = stock_count
-
->>>>>>> Stashed changes
 
         offer[stock] = pd.DataFrame({"buy": buy_price, "sell": sell_price, "quantity": n}, index=[0])
         new_opinion[stock] = abs(stockdata.at[stockdata.index[-1],"%D"])
