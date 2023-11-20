@@ -89,7 +89,6 @@ class Broker(Agent):
 
                         #transaction = {"buyer": buyer_name, "seller": seller_name, "price": price}
                         price = round((df_sell_sorted["sell"][index] + df_buy_sorted["buy"][index]) / 2, 2)
-
                         self.agent.environment.do_transaction(stock, price, buyer_name, seller_name)
 
             # Update the reputation  of the stock
