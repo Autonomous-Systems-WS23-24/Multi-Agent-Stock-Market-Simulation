@@ -40,6 +40,6 @@ async def main(num_investors,num_iterations):
     await wait_until_finished(Agent_Broker)
 
 if __name__ == "__main__":
-    num_investors = 1
-    num_iterations = 2
+    num_investors = 10
+    num_iterations = 100
     spade.run(main(num_investors,num_iterations))
