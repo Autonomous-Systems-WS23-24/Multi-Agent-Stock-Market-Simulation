@@ -16,20 +16,21 @@ import plotly.graph_objects as go
 
 
 class Environment():
-    def __init__(self, list_stocks,ownership_frame,list_investors):
+    def __init__(self, stock_list,ownership_frame,list_investors):
         self.list_investors = list_investors
-        self.list_stocks = list_stocks
+        self.stock_list = stock_list
         self.security_register = ownership_frame
         self.stock_candles = {}
         self.stock_opinions = {}
-        self.stock_reputation = np.ones(len(list_stocks))/(len(list_stocks))
+        self.stock_reputation = pd.DataFrame({stock: np.random.rand() for stock in self.stock_list}, index=[0])
+        self.stock_reputation = self.stock_reputation.div(self.stock_reputation.sum(axis=1), axis=0)
         self.orderbook_sell_offers = {}
         self.orderbook_buy_offers = {}
         self.transaction_list_one_day = {}
         #this part is for keeping track of statistics#####################
         self.stock_reputation_history = []
 
-        for stock in self.list_stocks:
+        for stock in self.stock_list:
             self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[460:560]
             self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
             self.orderbook_buy_offers[stock] = pd.DataFrame(columns=["name", "buy"])
@@ -69,7 +70,7 @@ class Environment():
 
 
     def create_candles(self):
-        for stock in self.list_stocks:
+        for stock in self.stock_list:
             if len(self.transaction_list_one_day[stock].index)>0:
                 open = self.transaction_list_one_day[stock]["price"].iloc[-1]
                 close = self.transaction_list_one_day[stock]["price"].iloc[-1]
@@ -98,9 +99,9 @@ class Environment():
         self.stock_opinions[jid] = opinion*weight
 
     def get_stock_reputation(self):
-        self.stock_reputation = np.zeros(len(self.list_stocks))
+        self.stock_reputation = pd.DataFrame({stock: 0 for stock in self.stock_list}, index=[0])
         for jid in self.list_investors:
-            self.stock_reputation += self.stock_opinions[jid]
+            self.stock_reputation.add(self.stock_opinions[jid])
         self.stock_reputation = self.stock_reputation/np.sum(self.stock_reputation)
         print(self.stock_reputation)
         self.stock_reputation_history.append(self.stock_reputation.tolist())
@@ -108,11 +109,11 @@ class Environment():
     def data_visualization(self):
         x = np.arange(0,len(self.stock_reputation_history))
         y = list(map(list, zip(*self.stock_reputation_history)))
-        plt.stackplot(x, y, labels=self.list_stocks)
+        plt.stackplot(x, y, labels=self.stock_list)
         plt.legend()
         plt.show()
 
-        for stock in self.list_stocks:
+        for stock in self.stock_list:
             df = self.stock_candles[stock]
             fig = go.Figure(data=[go.Candlestick(x=df['Date'],
                                                  open=df['Open'],

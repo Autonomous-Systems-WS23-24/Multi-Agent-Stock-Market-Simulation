@@ -90,7 +90,7 @@ class Investor(Agent):
         def execute_strategy(self):
             strategy = f'strategy{self.agent.strategy}'
             strategy_func = getattr(Strategies2, strategy, None)
-            orders, new_opinion = strategy_func(self.agent.jid[0], self.agent.environment.stock_candles, self.agent.environment.list_stocks, self.agent.risk_factor, self.agent.money,
+            orders, new_opinion = strategy_func(self.agent.jid[0], self.agent.environment.stock_candles, self.agent.environment.stock_list, self.agent.risk_factor, self.agent.money,
                           self.agent.environment.security_register, self.agent.opinions, self.agent.social_influence, self.agent.time_factor, self.agent.influencibility_index)
             self.agent.opinions = new_opinion
             return orders

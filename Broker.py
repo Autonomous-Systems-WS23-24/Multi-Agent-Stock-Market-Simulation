@@ -77,7 +77,7 @@ class Broker(Agent):
 
 
         async def match_transactions(self):
-            for stock in self.agent.environment.list_stocks:
+            for stock in self.agent.environment.stock_list:
                 df_buy = self.agent.environment.orderbook_buy_offers[stock]
                 df_sell = self.agent.environment.orderbook_sell_offers[stock]
                 df_buy_sorted = df_buy.sort_values(by="buy", ascending=False).reset_index(drop=True)
@@ -100,7 +100,7 @@ class Broker(Agent):
             # Update the reputation  of the stock
             self.agent.environment.get_stock_reputation()
 
-            for stock in self.agent.environment.list_stocks:
+            for stock in self.agent.environment.stock_list:
                 # Remove old offers that have not been matched
                 self.agent.environment.orderbook_buy_offers[stock].drop(self.agent.environment.orderbook_buy_offers[stock].index, inplace=True)
                 self.agent.environment.orderbook_sell_offers[stock].drop(self.agent.environment.orderbook_sell_offers[stock].index, inplace=True)

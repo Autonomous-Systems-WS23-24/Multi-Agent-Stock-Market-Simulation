@@ -6,18 +6,14 @@ import pandas as pd
 #Stategy 1 is a short-term strategy using RSI for calculating buy and sell prizes
 def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_register, opinions, social_influence, time_factor, influencibility_index):
     total_buy_price = 0
-    print(opinions)
-    print(social_influence)
-    # opinions = opinions.tolist()
-    # social_influence = social_influence.tolist()
     offer = {}
     new_opinion = {}
     for stock, index in zip(list_stocks, range(len(list_stocks))):
         # initialize values
         stock_count = security_register.at[jid, stock]
         stockdata = stockdata_dict[stock]
-        opinion_self_stock = opinions[index]
-        opinion_social_stock = social_influence[index]
+        opinion_self_stock = opinions[stock].iloc[0]
+        opinion_social_stock = social_influence[stock].iloc[0]
         money_to_spend = ((1-influencibility_index)*opinion_self_stock + influencibility_index*opinion_social_stock) * money
         n = 1
         sell_price = np.nan
@@ -78,8 +74,8 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         # Initialize values
         stock_count = security_register.at[jid, stock]
         stockdata = stockdata_dict[stock]
-        opinion_self_stock = opinions[index]
-        opinion_social_stock = social_influence[index]
+        opinion_self_stock = opinions[stock].iloc[0]
+        opinion_social_stock = social_influence[stock].iloc[0]
         money_to_spend = ((1 - influencibility_index) * opinion_self_stock + influencibility_index * opinion_social_stock) * money
         n = 1
         sell_price = np.nan
@@ -127,8 +123,8 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         # initialize values
         stock_count = security_register.at[jid, stock]
         stockdata = stockdata_dict[stock]
-        opinion_self_stock = opinions[index]
-        opinion_social_stock = social_influence[index]
+        opinion_self_stock = opinions[stock].iloc[0]
+        opinion_social_stock = social_influence[stock].iloc[0]
         money_to_spend = ((1 - influencibility_index) * opinion_self_stock + influencibility_index * opinion_social_stock) * money
         n = 1
         buy_price = np.nan
@@ -178,8 +174,8 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         #Initialize values
         stock_count = security_register.at[jid, stock]
         stockdata = stockdata_dict[stock]
-        opinion_self_stock = opinions[index]
-        opinion_social_stock = social_influence[index]
+        opinion_self_stock = opinions[stock].iloc[0]
+        opinion_social_stock = social_influence[stock].iloc[0]
         money_to_spend = ((1 - influencibility_index) * opinion_self_stock + influencibility_index * opinion_social_stock) * money
         n = 1
         buy_price = np.nan
