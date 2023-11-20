@@ -40,6 +40,10 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
             buy_price = price_mean * 0.97
             n = int(np.floor(money_to_spend/buy_price))
+            if n == 0:
+                sell_price = np.nan
+                buy_price = np.nan
+
 
 
         elif (stockdata.at[stockdata.index[-1], "RSI"] > RSI_sell_threshold
@@ -92,6 +96,9 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         if price_mean < stockdata.at[stockdata.index[-1], 'LowerBand'] and money_to_spend >= price_mean:
             buy_price = price_mean
             n = int(np.floor(money_to_spend / buy_price))
+            if n == 0:
+                sell_price = np.nan
+                buy_price = np.nan
 
         elif price_mean > stockdata.at[stockdata.index[-1], 'UpperBand'] and stock_count >= n:
             sell_price = (price_mean + price_high) / 2
@@ -144,6 +151,9 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         if price_mean < stockdata.at[stockdata.index[-1], "MA"] and money_to_spend >= price_mean and stockdata['%K'].iloc[-1] < 20:
             buy_price = price_mean
             n = int(np.floor(money_to_spend / buy_price))
+            if n == 0:
+                sell_price = np.nan
+                buy_price = np.nan
 
 
         elif price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0 and stockdata['%K'].iloc[-1] > 80:
@@ -197,6 +207,9 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         if macd_line.iloc[-1] > signal_line.iloc[-1] and money >= stockdata.at[stockdata.index[-1], 'Close']:
             buy_price = price_mean
             n = int(np.floor(money_to_spend / buy_price))
+            if n == 0:
+                sell_price = np.nan
+                buy_price = np.nan
 
         elif macd_line.iloc[-1] < signal_line.iloc[-1] and stock_count > 0:
             sell_price = (price_mean + price_high) / 2
