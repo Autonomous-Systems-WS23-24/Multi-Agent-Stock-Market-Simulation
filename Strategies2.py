@@ -138,19 +138,13 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
 
         position_size = max(1, int((risk_factor * money) / price_mean))
 
-        if (
-                price_mean < stockdata.at[stockdata.index[-1], "MA"] and money >= price_mean
-                and stockdata['%K'].iloc[-1] < 20
-        ):
+        if price_mean < stockdata.at[stockdata.index[-1], "MA"] and money >= price_mean and stockdata['%K'].iloc[-1] < 20:
             buy_price = price_mean
             if money > 5 * buy_price:
                 n = min(position_size, 5)
             total_buy_price += buy_price
             money -= buy_price * n
-        elif (
-                price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0
-                and stockdata['%K'].iloc[-1] > 80
-        ):
+        elif price_mean > stockdata.at[stockdata.index[-1], "MA"] and stock_count > 0 and stockdata['%K'].iloc[-1] > 80:
             sell_price = price_mean
             if stock_count >= 5:
                 n = min(position_size, stock_count)
