@@ -17,7 +17,7 @@ class Investor(Agent):
         self.stock_list = stock_list #list of all stocks
         # these are the attributes of an investor, we can change########################
         # this tells how much
-        self.influencibility_index = influencibility_index
+        self.influencibility_index = round(influencibility_index,2)
         # this determines how much old data the investor looks at. maximum 100 days
         self.time_factor = round(time_factor,2)
         # number of the strategy
@@ -25,11 +25,11 @@ class Investor(Agent):
         # how much the investor is influenced by the stock reputation vs. his own opinion
         self.social_influence = pd.DataFrame({stock: 0 for stock in self.stock_list},index=[0])
         # how easily the investor buys and sells stock
-        self.risk_factor = risk_factor
+        self.risk_factor = round(risk_factor,2)
         # cash
         self.money = money
         # how important is the traders opinion in the overall reputation of the stock (weighted average)
-        self.social_weight = social_weight
+        self.social_weight = round(social_weight,2)
         # create and normalize opinions. For the beginning this is random, the we calculate ne wones in the strategy after the first iteration
         self.opinions = pd.DataFrame({stock: np.random.rand() for stock in self.stock_list}, index=[0])
         self.opinions = self.opinions.div(self.opinions.sum(axis=1),axis=0)
@@ -67,7 +67,7 @@ class Investor(Agent):
                 y.append(self.agent.asset_value_lists[stock])
             y.append(self.agent.money_list)
             # total networth
-            ax1.plot(x,self.agent.networth_list,label= f"{self.agent.jid[0]} uses strategy {self.agent.strategy} with time factor {self.agent.time_factor}")
+            ax1.plot(x,self.agent.networth_list,label= f"{self.agent.jid[0]} uses  strat{self.agent.strategy}, time factor {self.agent.time_factor},\n risk {self.agent.risk_factor}, influencability {self.agent.influencibility_index}")
             ax1.set_title('networth total')
             ax1.set_xlabel('days')
             ax1.set_ylabel('networth')
