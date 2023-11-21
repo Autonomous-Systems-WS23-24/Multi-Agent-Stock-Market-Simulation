@@ -109,7 +109,7 @@ class Environment():
                                                  low=df['Low'],
                                                  close=df['Close'])])
 
-            #fig.show()
+            fig.show()
 
 
 
