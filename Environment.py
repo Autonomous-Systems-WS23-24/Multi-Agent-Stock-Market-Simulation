@@ -22,7 +22,9 @@ class Environment():
         self.transaction_list_one_day = {}
         #this part is for keeping track of statistics
         self.stock_reputation_history = []
-
+        self.best_investor = {"jid": 1,"profit":-100}
+        self.processed_investors = 0
+        self.break_condition = False
         for stock in self.stock_list:
             # load historical data
             self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[160:260]
@@ -115,7 +117,37 @@ class Environment():
                                                  low=df['Low'],
                                                  close=df['Close'])])
 
-            fig.show()
+            #fig.show()
+    def get_best_investor(self,jid,profit,strat,risk,time,influence):
+        self.processed_investors+= 1
+        if profit > self.best_investor["profit"]:
+            self.best_investor["jid"] = jid
+            self.best_investor["profit"] = profit
+            self.best_investor["strat"] = strat
+            self.best_investor["risk"] = risk
+            self.best_investor["time"]= time
+            self.best_investor["influence"] = influence
+        if self.processed_investors >= len(self.list_investors):
+            print("Created file!")
+            df = pd.DataFrame([self.best_investor])
+            # Define the CSV file path
+            csv_file_path = "best_investors.csv"
+            # Check if the file already exists
+            try:
+                # Read the existing CSV file
+                existing_df = pd.read_csv(csv_file_path)
+
+                # Append the new data to the existing DataFrame
+                updated_df = pd.concat([existing_df,df], ignore_index=True)
+
+            except FileNotFoundError:
+                # If the file doesn't exist, create a new DataFrame
+                updated_df = df
+
+            # Write the updated DataFrame to the CSV file
+            updated_df.to_csv(csv_file_path, index=False)
+            self.break_condition = True
+
 
 
 

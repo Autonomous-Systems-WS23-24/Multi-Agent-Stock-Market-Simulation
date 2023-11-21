@@ -36,12 +36,18 @@ async def main(num_investors,num_iterations):
     # initiate Investors: Strategies are equally distributed, money = 5000 for all, risk factor is uniformly distributed between 0.5 and 1, social weight 1, time factor is uniformly distributed between 0.2 and 1, influencability between uniformly between 0 and 1
     investors = [Investor.Investor(f"investor{i}@localhost", "1234",environment,(i%4)+1,5000,random.uniform(0.5,1),1,stock_list,random.uniform(0.2, 1),random.uniform(0,1),num_iterations=num_iterations) for i in range(1, num_investors + 1)]
     tasks = []
+    tasks2=[]
     await Agent_Broker.start()
     for investor in investors:
         tasks.append(investor.start())
     await asyncio.gather(*tasks)
     print("Wait until user interrupts with ctrl+C")
     await wait_until_finished(Agent_Broker)
+    await Agent_Broker.stop()
+    if environment.break_condition:
+        for investor in investors:
+            tasks2.append(investor.stop())
+    await asyncio.gather(*tasks2)
 
 if __name__ == "__main__":
     num_investors = 10

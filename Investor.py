@@ -58,43 +58,45 @@ class Investor(Agent):
 
 
         async def on_end(self):
+            profit = (self.agent.networth_list[-1] - self.agent.networth_list[0])/self.agent.networth_list[0]
+            self.agent.environment.get_best_investor(self.agent.jid, profit, self.agent.strategy, self.agent.risk_factor, self.agent.time_factor, self.agent.influencibility_index)
             # plot newtworth, networth distribution and relative profit
-            x = np.arange(0,len(self.agent.networth_list))
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))  # 1 row, 2 columns
-            y = []
-            for stock in self.agent.stock_list:
-                y.append(self.agent.asset_value_lists[stock])
-            y.append(self.agent.money_list)
+            #x = np.arange(0,len(self.agent.networth_list))
+            #fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))  # 1 row, 2 columns
+            #y = []
+            #for stock in self.agent.stock_list:
+            #    y.append(self.agent.asset_value_lists[stock])
+            #y.append(self.agent.money_list)
             # total networth
-            ax1.plot(x,self.agent.networth_list,label= f"{self.agent.jid[0]} uses  strat{self.agent.strategy}, time factor {self.agent.time_factor},\n risk {self.agent.risk_factor}, influencability {self.agent.influencibility_index}")
-            ax1.set_title('networth total')
-            ax1.set_xlabel('days')
-            ax1.set_ylabel('networth')
-            ax1.legend()
+            #ax1.plot(x,self.agent.networth_list,label= f"{self.agent.jid[0]} uses  strat{self.agent.strategy}, time factor {self.agent.time_factor},\n risk {self.agent.risk_factor}, influencability {self.agent.influencibility_index}")
+            #ax1.set_title('networth total')
+            #ax1.set_xlabel('days')
+            #ax1.set_ylabel('networth')
+            #ax1.legend()
             #networth distribution
-            labels = [stock for stock in self.agent.stock_list]
-            labels += ['money']
-            ax2.stackplot(x,*y, labels= labels)
-            ax2.set_title('networth distribution')
-            ax2.set_xlabel('days')
-            ax2.legend()
-            plt.tight_layout()
-            plt.show()
-            relative_change = [(day - self.agent.networth_list[0]) / self.agent.networth_list[0] for day in
-                               self.agent.networth_list]
-            plt.plot(x, relative_change, label=f'Relative Change in Networth {self.agent.jid[0]}')
+            #labels = [stock for stock in self.agent.stock_list]
+            #labels += ['money']
+            #ax2.stackplot(x,*y, labels= labels)
+            #ax2.set_title('networth distribution')
+            #ax2.set_xlabel('days')
+            #ax2.legend()
+            #plt.tight_layout()
+            #plt.show()
+            #relative_change = [(day - self.agent.networth_list[0]) / self.agent.networth_list[0] for day in
+             #                  self.agent.networth_list]
+            #plt.plot(x, relative_change, label=f'Relative Change in Networth {self.agent.jid[0]}')
             # Add labels and title
-            plt.xlabel('Days')
-            plt.ylabel('Relative Change')
+            #plt.xlabel('Days')
+            #plt.ylabel('Relative Change')
             # Show legend
-            plt.legend()
-            plt.legend()
-            plt.plot(x, relative_change, label=f'Relative Change in Networth {self.agent.jid[0]}')
-            plt.axhline(0, color='red', linestyle='--', label='y=0')
+            #plt.legend()
+            #plt.legend()
+            #plt.plot(x, relative_change, label=f'Relative Change in Networth {self.agent.jid[0]}')
+            #plt.axhline(0, color='red', linestyle='--', label='y=0')
             # Add labels and title
-            plt.xlabel('Days')
-            plt.ylabel('Relative Change')
-            plt.show()
+           # plt.xlabel('Days')
+          #  plt.ylabel('Relative Change')
+         #   plt.show()
 
         async def send_orders(self):
             # sends orders to the broker
