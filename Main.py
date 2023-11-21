@@ -44,10 +44,10 @@ async def main(num_investors,num_iterations):
     print("Wait until user interrupts with ctrl+C")
     await wait_until_finished(Agent_Broker)
     await Agent_Broker.stop()
+    for investor in investors:
+        tasks2.append(investor.stop())
     if environment.break_condition:
-        for investor in investors:
-            tasks2.append(investor.stop())
-    await asyncio.gather(*tasks2)
+        await asyncio.gather(*tasks2)
 
 if __name__ == "__main__":
     num_investors = 10

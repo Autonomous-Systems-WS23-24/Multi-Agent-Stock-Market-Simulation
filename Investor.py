@@ -60,6 +60,7 @@ class Investor(Agent):
         async def on_end(self):
             profit = (self.agent.networth_list[-1] - self.agent.networth_list[0])/self.agent.networth_list[0]
             self.agent.environment.get_best_investor(self.agent.jid, profit, self.agent.strategy, self.agent.risk_factor, self.agent.time_factor, self.agent.influencibility_index)
+
             # plot newtworth, networth distribution and relative profit
             #x = np.arange(0,len(self.agent.networth_list))
             #fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))  # 1 row, 2 columns
