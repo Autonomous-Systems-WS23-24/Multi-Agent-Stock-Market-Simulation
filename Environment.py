@@ -9,6 +9,7 @@ class Environment():
         self.list_investors = list_investors
         self.stock_list = stock_list
         self.security_register = ownership_frame
+        # stock data registry with historical data
         self.stock_candles = {}
         self.stock_opinions = {}
         for investor in list_investors:
@@ -19,10 +20,11 @@ class Environment():
         self.orderbook_sell_offers = {}
         self.orderbook_buy_offers = {}
         self.transaction_list_one_day = {}
-        #this part is for keeping track of statistics#####################
+        #this part is for keeping track of statistics
         self.stock_reputation_history = []
 
         for stock in self.stock_list:
+            # load historical data
             self.stock_candles[stock] = pd.read_csv('archive/Stocks/{}'.format(stock))[160:260]
             self.orderbook_sell_offers[stock] = pd.DataFrame(columns=["name", "sell"])
             self.orderbook_buy_offers[stock] = pd.DataFrame(columns=["name", "buy"])
@@ -41,6 +43,7 @@ class Environment():
             self.orderbook_sell_offers[stock] = pd.concat([self.orderbook_sell_offers[stock], offer],ignore_index=True)
 
     def do_transaction(self,stock,price,buyer_name,seller_name):
+        # put transaction into the daily transaction list, change security register
         transaction = pd.DataFrame({"buyer": buyer_name, "seller": seller_name, "price": price}, index=[0])
 
         # processing transaction to update security register
@@ -61,6 +64,7 @@ class Environment():
 
     def create_candles(self):
         for stock in self.stock_list:
+            # use daily transactions to create new candles
             if len(self.transaction_list_one_day[stock].index)>0:
                 open = self.transaction_list_one_day[stock]["price"].iloc[-1]
                 close = self.transaction_list_one_day[stock]["price"].iloc[-1]
@@ -72,7 +76,7 @@ class Environment():
                 print(f'Today transactions happened for {stock}')
 
             else:
-                #print(f"No Transactions today for stock {stock}! Creating artificial data!")
+                # if there are no transactions, create artificial normally distributed transactoins, to keep the market flowing
                 mean = (self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "Low"] + self.stock_candles[stock].at[self.stock_candles[stock].index[-1], "High"]) / 2
                 var = self.stock_candles[stock]['Close'].rolling(10).std().mean()
                 random_price_data = np.random.normal(mean, var, 20)
@@ -85,9 +89,11 @@ class Environment():
                 self.transaction_list_one_day[stock].reset_index()
 
     def push_opinions(self,jid,opinion,weight):
+        # get the opnion of investor
         self.stock_opinions[jid] = opinion*weight
 
     def get_stock_reputation(self):
+        # calculate the total reputation of stock
         self.stock_reputation = np.zeros(len(self.stock_list))
         for jid in self.list_investors:
             self.stock_reputation += self.stock_opinions[jid]
