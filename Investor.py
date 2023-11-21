@@ -15,15 +15,22 @@ class Investor(Agent):
         super().__init__(jid, password)
         self.environment = environment # environment
         self.stock_list = stock_list #list of all stocks
-        # these are the basic attributes of an investor
+        # these are the attributes of an investor, we can change########################
+        # this tells how much
         self.influencibility_index = influencibility_index
+        # this determines how much old data the investor looks at. maximum 100 days
         self.time_factor = round(time_factor,2)
+        # number of the strategy
         self.strategy = strategy
+        # how much the investor is influenced by the stock reputation vs. his own opinion
         self.social_influence = pd.DataFrame({stock: 0 for stock in self.stock_list},index=[0])
+        # how easily the investor buys and sells stock
         self.risk_factor = risk_factor
+        # cash
         self.money = money
+        # how important is the traders opinion in the overall reputation of the stock (weighted average)
         self.social_weight = social_weight
-        # create and normalize opinions
+        # create and normalize opinions. For the beginning this is random, the we calculate ne wones in the strategy after the first iteration
         self.opinions = pd.DataFrame({stock: np.random.rand() for stock in self.stock_list}, index=[0])
         self.opinions = self.opinions.div(self.opinions.sum(axis=1),axis=0)
         # here we define lists to keep track of the networth of every investor
@@ -33,6 +40,7 @@ class Investor(Agent):
         self.asset_value_lists = {}
         for stock in self.stock_list:
             self.asset_value_lists[stock]=[]
+        # keep track of how many iterations to do
         self.num_iterations = num_iterations
     class InvestBehav(CyclicBehaviour):
         async def on_start(self):
@@ -51,6 +59,7 @@ class Investor(Agent):
 
 
         async def on_end(self):
+            # plot newtworth, networth distribution and relative profit
             x = np.arange(0,len(self.agent.networth_list))
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))  # 1 row, 2 columns
             y = []
@@ -89,7 +98,8 @@ class Investor(Agent):
             plt.show()
 
         async def send_orders(self):
-            orders = self.execute_strategy()
+            # sends orders to the broker
+            orders = self.execute_strategy() # this function executes the strategy
             json_data = {stock: order.to_json(orient='records') for stock, order in orders.items()}
             msg = Message(to="broker@localhost")  # Instantiate the message
             msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
@@ -97,14 +107,17 @@ class Investor(Agent):
             await self.send(msg)
 
         def execute_strategy(self):
+            # call the corresponding strategy
             strategy = f'strategy{self.agent.strategy}'
             strategy_func = getattr(Strategies, strategy, None)
+            # get orders and new opinion from strategy function
             orders, new_opinion = strategy_func(self.agent.jid[0], self.agent.environment.stock_candles, self.agent.environment.stock_list, self.agent.risk_factor, self.agent.money,
                           self.agent.environment.security_register, self.agent.opinions, self.agent.social_influence, self.agent.time_factor, self.agent.influencibility_index)
             self.agent.opinions = new_opinion
             return orders
 
         async def ownership_update(self):
+            # look if the agent sold some stock inside of the stock history, if so, send and receive money.
             conf = await self.receive(timeout=10)
             if conf:
                 assets_values_total = 0
@@ -112,6 +125,7 @@ class Investor(Agent):
                     daily_transactions_stock = self.agent.environment.transaction_list_one_day[stock]
                     buys = daily_transactions_stock['buyer'].str.contains(str(self.agent.jid[0]))
                     sells = daily_transactions_stock['seller'].str.contains(str(self.agent.jid[0]))
+                    # update money
                     for price in daily_transactions_stock["price"][buys]:
                         self.agent.money -= price
                     for price in daily_transactions_stock["price"][sells]:
@@ -121,6 +135,7 @@ class Investor(Agent):
                     stock_value = (stock_low+stock_high)/2
 
                     assets_values_total += stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock]
+                    # all of this is for plotting
                     self.agent.asset_value_lists[stock].append(stock_value*self.agent.environment.security_register.at[self.agent.jid[0],stock])
                 self.agent.asset_networth_list.append(assets_values_total)
                 self.agent.money_list.append(self.agent.money)
@@ -128,6 +143,7 @@ class Investor(Agent):
 
 
         async def socialize(self):
+            # share opinions in the stock market. Influence other investors with that
             self.agent.environment.push_opinions(self.agent.jid[0],self.agent.opinions,self.agent.social_weight)
 
     async def setup(self):
