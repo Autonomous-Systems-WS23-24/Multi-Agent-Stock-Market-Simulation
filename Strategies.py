@@ -41,7 +41,7 @@ def strategy1(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=time_period, matype=0)
         # conditions for creating buy and sell offers
         if (stockdata.at[stockdata.index[-1], "RSI"] < RSI_buy_threshold
-                and price_mean <= stockdata.at[stockdata.index[-1], "MA"]) and money_to_spend >= price_mean:
+                and price_mean <= stockdata.at[stockdata.index[-1], "MA"]):
 
             buy_price = price_mean
             n = int(np.floor(money_to_spend/buy_price))
@@ -96,7 +96,7 @@ def strategy2(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         stockdata['LowerBand'] = stockdata['RollingMean'] - (num_std_dev * stockdata['RollingStd']*risk_factor)
 
         # Conditions for creating buy and sell offers using Bollinger Bands
-        if price_mean < stockdata.at[stockdata.index[-1], 'LowerBand'] and money_to_spend >= price_mean:
+        if price_mean < stockdata.at[stockdata.index[-1], 'LowerBand']:
             buy_price = stockdata.at[stockdata.index[-1],'RollingMean']
             n = int(np.floor(money_to_spend / buy_price))
             if n == 0:
@@ -150,7 +150,7 @@ def strategy3(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         stockdata["MA"] = tl.MA(stockdata['Close'], timeperiod=time_period, matype=0)
 
         # bus and sell conditions
-        if price_mean < stockdata.at[stockdata.index[-1], "MA"] and money_to_spend >= price_mean and stockdata['%K'].iloc[-1]*risk_factor < 20:
+        if price_mean < stockdata.at[stockdata.index[-1], "MA"] and stockdata['%K'].iloc[-1]*risk_factor < 20:
             buy_price = stockdata.at[stockdata.index[-1], "MA"]
             n = int(np.floor(money_to_spend / buy_price))
             if n == 0:
@@ -204,7 +204,7 @@ def strategy4(jid, stockdata_dict, list_stocks, risk_factor, money, security_reg
         signal_line = macd_line.ewm(span=signal_line_period, adjust=False).mean()*risk_factor
 
         # Buy and Sell conditions
-        if macd_line.iloc[-1] > signal_line.iloc[-1] and money >= stockdata.at[stockdata.index[-1], 'Close']:
+        if macd_line.iloc[-1] > signal_line.iloc[-1]:
             buy_price =  short_term_ema.iloc[-1]
             n = int(np.floor(money_to_spend / buy_price))
             if n == 0:
